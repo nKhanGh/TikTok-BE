@@ -1,0 +1,118 @@
+package com.tiktok.demo.controller;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.tiktok.demo.service.UserService;
+
+import jakarta.validation.Valid;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import com.tiktok.demo.dto.ApiResponse;
+import com.tiktok.demo.dto.request.UserCreationRequest;
+import com.tiktok.demo.dto.response.UserPrivateResponse;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PutMapping;
+
+import com.tiktok.demo.dto.request.UserUpdateRequest;
+import com.tiktok.demo.dto.response.UserPublicResponse;
+
+
+
+
+@RestController
+@RequestMapping("/users")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal=true)
+@Slf4j
+public class UserController {
+    UserService userService;
+    
+    @PostMapping
+    ApiResponse<UserPrivateResponse> createUser(@RequestBody @Valid UserCreationRequest retquest) {
+        log.info("In controller");
+        return ApiResponse.<UserPrivateResponse>builder()
+            .result(userService.createUser(retquest))
+            .build();
+    }
+
+    @GetMapping("/private")
+    ApiResponse<List<UserPrivateResponse>> getUsersByAdmin(){
+        return ApiResponse.<List<UserPrivateResponse>>builder()
+            .result(userService.getUsersByAdmin())
+            .build();
+    }
+
+    @GetMapping("/public")
+    ApiResponse<List<UserPublicResponse>> getUsersByUser(){
+        return ApiResponse.<List<UserPublicResponse>>builder()
+            .result(userService.getUsersByUser())
+            .build();
+    }
+    
+
+    @GetMapping("/private/{userId}")
+    ApiResponse<UserPrivateResponse> getUserbyAdmin(@PathVariable String userId){
+        return ApiResponse.<UserPrivateResponse>builder()
+            .result(userService.getUserByAdmin(userId))
+            .build();
+    }
+
+    @GetMapping("/public/{userId}")
+    ApiResponse<UserPublicResponse> getUserbyUser(@PathVariable String userId){
+        return ApiResponse.<UserPublicResponse>builder()
+            .result(userService.getUserByUser(userId))
+            .build();
+    }
+    
+
+    @PutMapping("/{userId}")
+    ApiResponse<UserPrivateResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest request){
+        return ApiResponse.<UserPrivateResponse>builder()
+            .result(userService.updateUser(userId, request))
+            .build();
+    }
+
+    @DeleteMapping("/{userId}")
+    ApiResponse<String> deleteUser(@PathVariable String userId){
+        userService.deleteUser(userId);
+        return ApiResponse.<String>builder()
+            .result("User has been deleted!")
+            .build();
+    }
+
+    @GetMapping("/myInfo")
+    ApiResponse<UserPrivateResponse> getMyInfo(){
+        return ApiResponse.<UserPrivateResponse>builder()
+            .result(userService.getMyInfo())
+            .build();
+    }
+
+    @PostMapping("/{userId}/{action}")
+    ApiResponse followUser(
+        @PathVariable String userId,
+        @PathVariable String action
+    ){
+        return ApiResponse.builder()
+            .message(userService.addFollowStatus(userId, action))
+            .build();
+    }
+    
+    
+    
+    
+    
+}

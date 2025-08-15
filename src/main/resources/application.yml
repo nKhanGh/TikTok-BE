@@ -1,0 +1,20 @@
+server:
+    port: 8080
+
+spring:
+    profiles:
+        active: dev
+    datasource:
+        url: jdbc:mysql://localhost:3308/myTiktok
+        driverClassName: "com.mysql.cj.jdbc.Driver"
+    jpa:
+        hibernate:
+            ddl-auto: update    
+        show-sql: true
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.MySQL8Dialect
+
+jwt:
+    valid-duration: 3000
+    refreshable-duration: 2000
