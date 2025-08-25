@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 
 import com.tiktok.demo.dto.request.UserUpdateRequest;
+import com.tiktok.demo.dto.request.UsernameAddRequest;
 import com.tiktok.demo.dto.response.UserPublicResponse;
 
 
@@ -42,10 +43,10 @@ public class UserController {
     UserService userService;
     
     @PostMapping
-    ApiResponse<UserPrivateResponse> createUser(@RequestBody @Valid UserCreationRequest retquest) {
+    ApiResponse<UserPrivateResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
         log.info("In controller");
         return ApiResponse.<UserPrivateResponse>builder()
-            .result(userService.createUser(retquest))
+            .result(userService.createUser(request, true))
             .build();
     }
 
@@ -110,6 +111,14 @@ public class UserController {
             .message(userService.addFollowStatus(userId, action))
             .build();
     }
+
+    @PostMapping("/set-username")
+    ApiResponse<UserPrivateResponse> setUsername(@RequestBody @Valid UsernameAddRequest request){
+        return ApiResponse.<UserPrivateResponse>builder()
+            .result(userService.addUsername(request))
+            .build();
+    }
+    
     
     
     

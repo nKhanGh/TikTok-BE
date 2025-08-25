@@ -27,7 +27,9 @@ public class SecurityConfig {
     CustomAccessDeniedHandler customAccessDeniedHandler;
 
     static String[] PUBLIC_ENDPOINT = {
-        "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh"
+        "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", 
+        "/emails/sender/verifyCode", "/emails/verify",
+        "/auth/register", "/auth/verify-email", "/users/set-username"
     };
 
     @Bean

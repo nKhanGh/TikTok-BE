@@ -1,6 +1,7 @@
 package com.tiktok.demo.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import org.hibernate.annotations.ManyToAny;
@@ -37,6 +38,8 @@ public class User {
     String bio;
     boolean isDeleted;
     LocalDate dob;
+    boolean isVerified = false;
+    LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToMany
     @JoinTable(

@@ -1,6 +1,7 @@
 package com.tiktok.demo.dto.response;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import lombok.AccessLevel;
@@ -24,5 +25,7 @@ public class UserPrivateResponse {
     String bio;
     LocalDate dob;
     boolean isDeleted;
+    boolean isVerified;
+    LocalDateTime createdAt;
     Set<RoleResponse> roles;
 }

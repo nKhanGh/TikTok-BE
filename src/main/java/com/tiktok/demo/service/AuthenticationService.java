@@ -25,13 +25,20 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.tiktok.demo.dto.request.AuthenticationRequest;
+import com.tiktok.demo.dto.request.EmailVerifyRequest;
 import com.tiktok.demo.dto.request.IntrospectRequest;
 import com.tiktok.demo.dto.request.LogoutRequest;
 import com.tiktok.demo.dto.request.RefreshTokenRequest;
+import com.tiktok.demo.dto.request.UserCreationRequest;
+import com.tiktok.demo.dto.request.UserRegisterRequest;
+import com.tiktok.demo.dto.request.UserUpdateRequest;
 import com.tiktok.demo.dto.response.AuthenticationResponse;
+import com.tiktok.demo.dto.response.EmailVerifyResponse;
 import com.tiktok.demo.dto.response.IntrospectResponse;
 import com.tiktok.demo.dto.response.LogoutResponse;
 import com.tiktok.demo.dto.response.RefreshTokenResponse;
+import com.tiktok.demo.dto.response.UserPrivateResponse;
+import com.tiktok.demo.dto.response.UserRegisterResonse;
 import com.tiktok.demo.entity.InvalidatedToken;
 import com.tiktok.demo.entity.User;
 import com.tiktok.demo.exception.AppException;
@@ -50,8 +57,12 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal=true)
 @Slf4j
 public class AuthenticationService {
+
+    UserService userService;
     UserRepository userRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
+
+    EmailService emailService;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -85,14 +96,14 @@ public class AuthenticationService {
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
             .jwtID(UUID.randomUUID().toString())
             .issuer("tiktok.com")
-            .subject(user.getUsername())
+            .subject(user.getUsername() != null ? user.getUsername() : user.getEmail())
             .issueTime(new Date())
             .expirationTime(new Date(
                 Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
             ))
             .claim("scope", buildScope(user))
             .build();
-         
+        
         
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
 
@@ -206,5 +217,41 @@ public class AuthenticationService {
         invalidatedTokens.forEach((invalidatedToken) -> {
             invalidatedTokenRepository.deleteById(invalidatedToken.getId());
         });
+    }
+
+    public UserRegisterResonse register(UserRegisterRequest request){
+        if(userRepository.existsByEmail(request.getToEmail()))
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+
+        userService.createUser(UserCreationRequest.builder()
+            .email(request.getToEmail())
+            .password(request.getPassword())
+            .dob(request.getDob())
+            .build()
+        , false);
+
+        emailService.sendVerificationCode(request);
+
+        return UserRegisterResonse.builder().result(true).build();
+    }
+
+    public EmailVerifyResponse verifyEmail(EmailVerifyRequest request){
+        EmailVerifyResponse response = emailService.verifyEmail(request);
+        if(response != null && !response.isValid()){
+            throw new AppException(ErrorCode.VERIFY_CODE_NOT_TRUE);
+        }
+        User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setVerified(true);
+        userRepository.save(user);
+        String token = generateToken(user);
+        if(response != null) response.setToken(token);
+        return response;
+    }
+
+    public UserPrivateResponse setUserName(UserUpdateRequest request){
+        User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        return userService.updateUser(user.getId(), request);
     }
 }

@@ -1,5 +1,8 @@
 package com.tiktok.demo.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -7,11 +10,13 @@ import java.util.List;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.tiktok.demo.dto.request.UserCreationRequest;
 import com.tiktok.demo.dto.request.UserUpdateRequest;
+import com.tiktok.demo.dto.request.UsernameAddRequest;
 import com.tiktok.demo.dto.response.UserPrivateResponse;
 import com.tiktok.demo.dto.response.UserPublicResponse;
 import com.tiktok.demo.entity.User;
@@ -39,22 +44,34 @@ public class UserService {
     RoleRepository roleRepository;
     UserRelationRepository userRelationRepository;
 
-    PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
     UserMapper userMapper;    
 
-    public UserPrivateResponse createUser(UserCreationRequest request){
-        if(userRepository.existsByUsername(request.getUsername()))
+    public UserPrivateResponse createUser(UserCreationRequest request, boolean isVerified){
+        if(request.getUsername() != null && userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
-        if(userRepository.existsByName(request.getName()))
-            throw new AppException(ErrorCode.NAME_EXISTED);
         User user = userMapper.toUser(request);
         
         var roles = roleRepository.findAllById(List.of("USER"));
         user.setRoles(new HashSet<>(roles));
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setDeleted(false);
+        user.setVerified(isVerified);
+        user.setCreatedAt(LocalDateTime.now());
 
+        return userMapper.toUserPrivateResponse(userRepository.save(user));
+    }
+
+    public UserPrivateResponse addUsername(UsernameAddRequest request){
+        if(!request.getEmail().equals(SecurityContextHolder.getContext().getAuthentication().getName()))
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if(userRepository.existsByUsername(request.getUsername())){
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+        user.setUsername(request.getUsername());
         return userMapper.toUserPrivateResponse(userRepository.save(user));
     }
 
@@ -148,6 +165,12 @@ public class UserService {
             message = "You have " + followStatus.toLowerCase() + "ed this user!";
         }
         return message;
+    }
+
+    public void deleteNotVerifiedUser(){
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(1);
+        List<User> notVerifiedUsers = userRepository.findAllByIsVerifiedFalseAndCreatedAtBefore(threshold);
+        notVerifiedUsers.forEach(user -> userRepository.deleteById(user.getId()));
     }
 
 

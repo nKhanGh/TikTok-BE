@@ -5,27 +5,18 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.tiktok.demo.dto.ApiResponse;
 
-import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintViolation;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
-    // @ExceptionHandler(value = RuntimeException.class)
-    // ResponseEntity<ApiResponse> handlingRunTimeException(RuntimeException exception){
-    //     return ResponseEntity.badRequest().body(
-    //         ApiResponse.builder()
-    //             .code(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode())
-    //             .message(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage())
-    //         .build()
-    //     );
-    // }
-
     @ExceptionHandler(value = AppException.class)
     ResponseEntity<ApiResponse> handlingAppException(AppException exception){
         ErrorCode errorCode = exception.getErrorCode();
@@ -40,15 +31,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     ResponseEntity<ApiResponse> handlingNotValidException(MethodArgumentNotValidException exception){
-        String enumKey = exception.getFieldError().getDefaultMessage();
+        FieldError fieldError = exception.getBindingResult().getFieldError();
+        String enumKey = fieldError.getDefaultMessage() ;
         ErrorCode errorCode = ErrorCode.INVALID_KEY;
 
         Map<String, Object> attributes = null;
         
         try {
             errorCode = ErrorCode.valueOf(enumKey);
-            var constraintViolation = exception
-                .getBindingResult().getAllErrors().get(0).unwrap(ConstraintViolation.class);
+            var constraintViolation = fieldError.unwrap(ConstraintViolation.class);
 
             attributes = constraintViolation.getConstraintDescriptor().getAttributes();
         } catch (IllegalArgumentException e) {
@@ -63,9 +54,32 @@ public class GlobalExceptionHandler {
             .build()
         );
     }
+        
+    // @ExceptionHandler(MethodArgumentNotValidException.class)
+    // public ResponseEntity<ApiResponse> handleValidationException(MethodArgumentNotValidException ex){
+    //     FieldError fieldError = ex.getBindingResult().getFieldError();
+    //     String enumKey = fieldError.getDefaultMessage(); // USERNAME_DIGIT_LETTER, USERNAME_EMPTY, ...
+        
+    //     ErrorCode errorCode;
+    //     try {
+    //         errorCode = ErrorCode.valueOf(enumKey);
+    //     } catch (IllegalArgumentException e) {
+    //         errorCode = ErrorCode.INVALID_KEY;
+    //     }
+
+    //     return ResponseEntity.status(errorCode.getStatusCode())
+    //             .body(ApiResponse.builder()
+    //                     .code(errorCode.getCode())
+    //                     .message(errorCode.getMessage())
+    //                     .build());
+    // }
+
+
 
     private String mapAttribute(String message, Map<String, Object> attributes){
-        String minValue = attributes.get("min").toString();
+        String minValue = attributes.get("min") != null 
+            ? attributes.get("min").toString()
+            : "";
 
         return message.replace("{min}", minValue);
     }
