@@ -43,7 +43,7 @@ public enum ErrorCode {
     USERNAME_FIRST_CHAR(1032, "Username's first character must be letter.", HttpStatus.BAD_REQUEST),
     USERNAME_CHARACTER(1033, "Username's character must be letter, digit, (_) and (.).", HttpStatus.BAD_REQUEST),
     USERNAME_DIGIT_LETTER(1034, "Username must have both digit and character", HttpStatus.BAD_REQUEST),
-
+    VIDEO_SIGNED_URL(1035, "Video signed url does not exist", HttpStatus.BAD_REQUEST),
     ;
 
     private int code;

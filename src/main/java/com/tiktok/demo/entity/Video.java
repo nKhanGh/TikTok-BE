@@ -12,7 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +29,7 @@ public class Video {
     @Id
     @GeneratedValue(strategy=GenerationType.UUID)
     String id;
-    String videoUrl;
+    String videoFileName;
     String caption;
     int viewCount;
     int likeCount;
@@ -61,7 +60,4 @@ public class Video {
         inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
     Set<Hashtag> hashtags;
-
-
-
 }

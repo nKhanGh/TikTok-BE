@@ -2,6 +2,10 @@ server:
     port: 8080
 
 spring:
+    servlet:
+        multipart:
+            max-file-size: 20MB
+            max-request-size: 20MB
     profiles:
         active: dev
     datasource:
@@ -31,6 +35,11 @@ spring:
             port: 6379
             password: ${REDIS_PASSWORD}
 
+b2:
+    applicationKeyId: 003dc34d400bf120000000002
+    applicationKey: K0037Ii8NfPJWemGS3AUNJTtUBC1w2Y
+    bucketName: tiktokVideos1410
+    bucketId: 7d5c83e49dd4d0f09b8f0112
 
 jwt:
     valid-duration: 3000

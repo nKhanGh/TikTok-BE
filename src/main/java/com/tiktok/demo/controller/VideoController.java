@@ -2,6 +2,7 @@ package com.tiktok.demo.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.tiktok.demo.service.VideoService;
 
@@ -12,11 +13,12 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.backblaze.b2.client.exceptions.B2Exception;
 import com.tiktok.demo.dto.ApiResponse;
 import com.tiktok.demo.dto.request.VideoRequest;
 import com.tiktok.demo.dto.response.VideoResponse;
-import com.tiktok.demo.repository.VideoRepository;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,9 +36,14 @@ public class VideoController {
     VideoService videoService;
 
     @PostMapping
-    ApiResponse<VideoResponse> createVideo(@RequestBody VideoRequest request){
+    ApiResponse<VideoResponse> createVideo(
+        @RequestParam("videoFile") MultipartFile videoFile,
+        @RequestParam("caption") String caption,
+        @RequestParam(value="musicId", required=false) String musicId,
+        @RequestParam(value="hashtags", required=false) List<String> hashtags
+    ) throws B2Exception, IOException{
         return ApiResponse.<VideoResponse>builder()
-            .result(videoService.createVideo(request))
+            .result(videoService.createVideo(videoFile, caption, musicId, hashtags))
             .build();
     }
 
@@ -81,10 +88,9 @@ public class VideoController {
     }
 
     @PostMapping("/{videoId}/view")
-    ApiResponse viewVideo(@PathVariable String videoId){
-        videoService.viewVideo(videoId);
-        return ApiResponse.builder()
-            .message("You have viewed this video!")
+    ApiResponse<String> viewVideo(@PathVariable String videoId) throws B2Exception{
+        return ApiResponse.<String>builder()
+            .result(videoService.viewVideo(videoId))
             .build();
     }
     

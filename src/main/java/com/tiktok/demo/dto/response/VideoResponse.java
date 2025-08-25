@@ -17,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class VideoResponse {
     String id;
-    String videoUrl;
+    String videoFileName;
     String caption;
     int viewCount;
     int likeCount;
