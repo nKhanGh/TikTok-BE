@@ -139,7 +139,7 @@ public class VideoService {
         if (videoSignedUrl.isPresent() && videoSignedUrl.get().getExpireAt().after(new Date())) {
             return videoSignedUrl.get().getSignedUrl();
         }
-
+ 
         AwsBasicCredentials awscred = AwsBasicCredentials.create(applicationKeyId, applicationKey);
         S3Presigner presigner = S3Presigner.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(awscred))

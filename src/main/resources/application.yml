@@ -1,11 +1,14 @@
 server:
     port: 8080
+    servlet:
+        context-path: /api
 
 spring:
     servlet:
         multipart:
             max-file-size: 20MB
             max-request-size: 20MB
+        
     profiles:
         active: dev
     datasource:
@@ -43,4 +46,4 @@ b2:
 
 jwt:
     valid-duration: 3000
-    refreshable-duration: 2000
+    refreshable-duration: 10000

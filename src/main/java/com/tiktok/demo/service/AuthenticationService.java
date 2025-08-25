@@ -77,12 +77,12 @@ public class AuthenticationService {
     protected long VALID_DURATION;
 
     public AuthenticationResponse login(AuthenticationRequest request){
-        var user = userRepository.findByUsername(request.getUsername())
+        var user = userRepository.findByUsernameOrEmail(request.getUsernameOrEmail(), request.getUsernameOrEmail())
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         Boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if(!authenticated)
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.PASSWORD_NOT_TRUE);
         String token = generateToken(user);
         return AuthenticationResponse.builder()
             .auhthenticated(true)

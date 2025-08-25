@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.hibernate.annotations.ManyToAny;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,9 +31,11 @@ public class User {
     @Id
     @GeneratedValue(strategy=GenerationType.UUID)
     String id;
+    @Column(unique=true)
     String username;
     String password;
     String name;
+    @Column(unique=true)
     String email;
     String avatarUrl;
     String bio;

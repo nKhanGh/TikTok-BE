@@ -28,8 +28,8 @@ public class SecurityConfig {
 
     static String[] PUBLIC_ENDPOINT = {
         "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", 
-        "/emails/sender/verifyCode", "/emails/verify",
-        "/auth/register", "/auth/verify-email", "/users/set-username"
+        "/emails/sender/verifyCode", "emails/verify",
+        "/auth/register", "/auth/verify-email",
     };
 
     @Bean
