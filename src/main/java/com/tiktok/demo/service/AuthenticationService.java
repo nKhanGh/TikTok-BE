@@ -220,16 +220,24 @@ public class AuthenticationService {
     }
 
     public UserRegisterResonse register(UserRegisterRequest request){
-        if(userRepository.existsByEmail(request.getToEmail()))
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
-
-        userService.createUser(UserCreationRequest.builder()
-            .email(request.getToEmail())
-            .password(request.getPassword())
-            .dob(request.getDob())
-            .build()
-        , false);
-
+        var user = userRepository.findByEmail(request.getToEmail());
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        if(user.isPresent() ){
+            if(user.get().isVerified())
+                throw new AppException(ErrorCode.EMAIL_EXISTED);
+            else{
+                user.get().setPassword(passwordEncoder.encode(request.getPassword()));
+                user.get().setDob(request.getDob());
+                userRepository.save(user.get());
+            }
+        } else {
+            userService.createUser(UserCreationRequest.builder()
+                .email(request.getToEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .dob(request.getDob())
+                .build()
+            , false);
+        }
         emailService.sendVerificationCode(request);
 
         return UserRegisterResonse.builder().result(true).build();

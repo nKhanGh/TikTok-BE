@@ -11,11 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import com.backblaze.b2.client.exceptions.B2Exception;
 import com.tiktok.demo.dto.ApiResponse;
-import com.tiktok.demo.dto.request.VideoRequest;
 import com.tiktok.demo.dto.response.VideoResponse;
 
 import java.io.IOException;

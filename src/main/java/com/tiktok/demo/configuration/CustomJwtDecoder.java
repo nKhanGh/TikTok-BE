@@ -1,6 +1,5 @@
 package com.tiktok.demo.configuration;
 
-import java.text.ParseException;
 import java.util.Objects;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -13,7 +12,6 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
 
-import com.nimbusds.jose.JOSEException;
 import com.tiktok.demo.dto.request.IntrospectRequest;
 import com.tiktok.demo.service.AuthenticationService;
 
@@ -28,7 +26,7 @@ import lombok.experimental.NonFinal;
 public class CustomJwtDecoder implements JwtDecoder{
     @NonFinal
     @Value("${jwt.signerKey}")
-    String SIGNER_KEY;
+    String signerKey;
 
     AuthenticationService authenticationService;
 
@@ -44,7 +42,7 @@ public class CustomJwtDecoder implements JwtDecoder{
         }
 
         if(Objects.isNull(nimbusJwtDecoder)){
-            SecretKeySpec secretKeySpec = new SecretKeySpec(SIGNER_KEY.getBytes(), "HS512");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS512");
             nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKeySpec)
                 .macAlgorithm(MacAlgorithm.HS512)
                 .build();

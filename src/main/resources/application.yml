@@ -39,10 +39,13 @@ spring:
             password: ${REDIS_PASSWORD}
 
 b2:
-    applicationKeyId: 003dc34d400bf120000000002
-    applicationKey: K0037Ii8NfPJWemGS3AUNJTtUBC1w2Y
-    bucketName: tiktokVideos1410
-    bucketId: 7d5c83e49dd4d0f09b8f0112
+    keyId: ${BUCKET_KEY_ID}
+    applicationKey: ${BUCKET_APPLICATION_KEY}
+    videoBucketName: ${BUCKET_VIDEO_NAME}
+    videoBucketId: ${BUCKET_VIDEO_ID}
+
+    imageBucketName: ${BUCKET_IMAGE_NAME}
+    imageBucketId: ${BUCKET_IMAGE_ID}
 
 jwt:
     valid-duration: 3000

@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.tiktok.demo.dto.response.PermissionResponse;
 import com.tiktok.demo.entity.Permission;
 import com.tiktok.demo.entity.Role;
 import com.tiktok.demo.entity.User;

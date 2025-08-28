@@ -4,8 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-import org.hibernate.annotations.ManyToAny;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -38,6 +36,7 @@ public class User {
     @Column(unique=true)
     String email;
     String avatarUrl;
+    String avatarFileId;
     String bio;
     boolean isDeleted;
     LocalDate dob;

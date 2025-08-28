@@ -22,6 +22,7 @@ import com.backblaze.b2.client.exceptions.B2Exception;
 import com.backblaze.b2.client.structures.B2Bucket;
 import com.backblaze.b2.client.structures.B2DownloadAuthorization;
 import com.backblaze.b2.client.structures.B2GetDownloadAuthorizationRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectAclRequest;
 import com.backblaze.b2.client.structures.B2UploadFileRequest;
 import com.tiktok.demo.dto.response.VideoResponse;
 import com.tiktok.demo.entity.Hashtag;
@@ -61,25 +62,13 @@ public class VideoService {
     VideoSignedUrlRepository videoSignedUrlRepository;
     MusicRepository musicRepository;
     UserRepository userRepository;
-
     @NonFinal
-    @Value("${b2.bucketId}")
-    String bucketId;
-
-    @NonFinal
-    @Value("${b2.applicationKeyId}")
-    String applicationKeyId;
-
-    @NonFinal
-    @Value("${b2.applicationKey}")
-    String applicationKey;
-
-    @NonFinal
-    @Value("${b2.bucketName}")
+    @Value("${b2.videoBucketName}")
     String bucketName;
 
     B2StorageClient b2StorageClient;
 
+    S3Presigner s3Presigner;
     VideoMapper videoMapper;
 
     HashtagService hashtagService;
@@ -139,25 +128,16 @@ public class VideoService {
         if (videoSignedUrl.isPresent() && videoSignedUrl.get().getExpireAt().after(new Date())) {
             return videoSignedUrl.get().getSignedUrl();
         }
- 
-        AwsBasicCredentials awscred = AwsBasicCredentials.create(applicationKeyId, applicationKey);
-        S3Presigner presigner = S3Presigner.builder()
-                .credentialsProvider(StaticCredentialsProvider.create(awscred))
-                .region(Region.EU_CENTRAL_1)
-                .endpointOverride(URI.create("https://s3.eu-central-003.backblazeb2.com"))
-                .build();
-
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(fileName)
-                .build();
 
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
                 .signatureDuration(Duration.ofHours(1))
-                .getObjectRequest(getObjectRequest)
+                .getObjectRequest(gor -> gor
+                    .bucket(bucketName)
+                    .key(fileName)
+                    .build())
                 .build();
 
-        String tempUrl = presigner.presignGetObject(presignRequest).url().toString();
+        String tempUrl = s3Presigner.presignGetObject(presignRequest).url().toString();
         VideoSignedUrl newVideoSignedUrl = VideoSignedUrl.builder()
                 .createdAt(new Date())
                 .expireAt(new Date(Instant.now().plus(3600, ChronoUnit.SECONDS).toEpochMilli()))

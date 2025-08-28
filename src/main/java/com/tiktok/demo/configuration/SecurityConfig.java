@@ -26,17 +26,22 @@ public class SecurityConfig {
     CustomJwtDecoder jwtDecoder;
     CustomAccessDeniedHandler customAccessDeniedHandler;
 
-    static String[] PUBLIC_ENDPOINT = {
+    static String[] publicEndPointPost = {
         "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", 
         "/emails/sender/verifyCode", "emails/verify",
-        "/auth/register", "/auth/verify-email",
+        "/auth/register", "/auth/verify-email"
+    };
+
+    static String[] publicEndpointGet = {
+        "/users/exist/**", "/images/**"
     };
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
 
         http.authorizeHttpRequests(request -> request
-            .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINT).permitAll()
+            .requestMatchers(HttpMethod.POST, publicEndPointPost).permitAll()
+            .requestMatchers(HttpMethod.GET, publicEndpointGet).permitAll()
             .anyRequest().authenticated()
         );
 

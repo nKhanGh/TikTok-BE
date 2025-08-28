@@ -1,8 +1,7 @@
-package com.tiktok.demo.dto.response;
+package com.tiktok.demo.dto.request;
 
-import java.time.LocalDate;
-import java.util.Set;
-
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,10 +14,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserPublicResponse {
-    String id;
-    String username;
-    String name;
-    String avatarUrl;
-    String bio;
+public class UsernameRandomAddRequest {
+    @NotBlank(message="INVALID_EMAIL")
+    @Email
+    String email;
 }

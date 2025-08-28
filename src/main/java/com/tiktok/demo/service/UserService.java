@@ -1,11 +1,11 @@
 package com.tiktok.demo.service;
 
-import java.time.LocalDate;
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,10 +13,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.backblaze.b2.client.exceptions.B2Exception;
+import com.nimbusds.jose.proc.SecurityContext;
 import com.tiktok.demo.dto.request.UserCreationRequest;
 import com.tiktok.demo.dto.request.UserUpdateRequest;
 import com.tiktok.demo.dto.request.UsernameAddRequest;
+import com.tiktok.demo.dto.request.UsernameRandomAddRequest;
 import com.tiktok.demo.dto.response.UserPrivateResponse;
 import com.tiktok.demo.dto.response.UserPublicResponse;
 import com.tiktok.demo.entity.User;
@@ -48,6 +52,8 @@ public class UserService {
 
     UserMapper userMapper;    
 
+    ImageService imageService;
+
     public UserPrivateResponse createUser(UserCreationRequest request, boolean isVerified){
         if(request.getUsername() != null && userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -63,7 +69,7 @@ public class UserService {
         return userMapper.toUserPrivateResponse(userRepository.save(user));
     }
 
-    public UserPrivateResponse addUsername(UsernameAddRequest request){
+    public UserPublicResponse addUsername(UsernameAddRequest request){
         if(!request.getEmail().equals(SecurityContextHolder.getContext().getAuthentication().getName()))
             throw new AppException(ErrorCode.UNAUTHORIZED);
         User user = userRepository.findByEmail(request.getEmail())
@@ -72,7 +78,7 @@ public class UserService {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
         user.setUsername(request.getUsername());
-        return userMapper.toUserPrivateResponse(userRepository.save(user));
+        return userMapper.toUserPublicResponse(userRepository.save(user));
     }
 
     @PostAuthorize("hasAuthority('ADMIN_EDIT_USER') or returnObject.username == authentication.name")
@@ -116,13 +122,13 @@ public class UserService {
     }
 
 
-    public UserPrivateResponse getMyInfo(){
+    public UserPublicResponse getMyInfo(){
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 
         User user = userRepository.findByUsername(name)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        return userMapper.toUserPrivateResponse(user);
+        return userMapper.toUserPublicResponse(user);
     }
 
 
@@ -173,5 +179,53 @@ public class UserService {
         notVerifiedUsers.forEach(user -> userRepository.deleteById(user.getId()));
     }
 
+    public boolean usernameExist(String username){
+        return userRepository.existsByUsername(username);
+    }
 
+    String generateUsername(){
+        Random random = new Random();
+        String username;
+        do{
+            long number = Math.abs(random.nextLong() % 1_000_000_0000L);
+            username = "User" + number;
+        } while (userRepository.existsByUsername(username));
+
+        return username;
+    }
+
+    public UserPublicResponse addRandomUsername(UsernameRandomAddRequest request){
+        String ownEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        String reqEmail = request.getEmail();
+        if(!ownEmail.equals(reqEmail))
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        String username = generateUsername();
+        User user = userRepository.findByEmail(ownEmail)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setUsername(username);
+        userRepository.save(user);
+        return userMapper.toUserPublicResponse(user);
+    }
+
+    public UserPublicResponse setAvatar(MultipartFile avatarFile) throws B2Exception, IOException{
+        String[] avatar = imageService.uploadImage(avatarFile);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if(user.getAvatarUrl() != null && user.getAvatarFileId() != null){
+            imageService.deleteImage(user.getAvatarUrl(), user.getAvatarFileId());
+        }
+        user.setAvatarUrl(avatar[0]);
+        user.setAvatarFileId(avatar[1]);
+        userRepository.save(user);
+        return userMapper.toUserPublicResponse(user);
+    }
+
+    public String getAvatar(){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if(user.getAvatarUrl() == null) return "/images/default_avatar.jpg";
+        return imageService.getImage(user.getAvatarUrl());
+    }
 }

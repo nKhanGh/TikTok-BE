@@ -6,10 +6,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tiktok.demo.service.UserService;
 
 import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.backblaze.b2.client.exceptions.B2Exception;
 import com.tiktok.demo.dto.ApiResponse;
 import com.tiktok.demo.dto.request.UserCreationRequest;
 import com.tiktok.demo.dto.response.UserPrivateResponse;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,9 +29,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.tiktok.demo.dto.request.UserUpdateRequest;
 import com.tiktok.demo.dto.request.UsernameAddRequest;
+import com.tiktok.demo.dto.request.UsernameRandomAddRequest;
 import com.tiktok.demo.dto.response.UserPublicResponse;
 
 
@@ -96,8 +101,8 @@ public class UserController {
     }
 
     @GetMapping("/myInfo")
-    ApiResponse<UserPrivateResponse> getMyInfo(){
-        return ApiResponse.<UserPrivateResponse>builder()
+    ApiResponse<UserPublicResponse> getMyInfo(){
+        return ApiResponse.<UserPublicResponse>builder()
             .result(userService.getMyInfo())
             .build();
     }
@@ -113,11 +118,43 @@ public class UserController {
     }
 
     @PostMapping("/set-username")
-    ApiResponse<UserPrivateResponse> setUsername(@RequestBody @Valid UsernameAddRequest request){
-        return ApiResponse.<UserPrivateResponse>builder()
+    ApiResponse<UserPublicResponse> setUsername(@RequestBody @Valid UsernameAddRequest request){
+        return ApiResponse.<UserPublicResponse>builder()
             .result(userService.addUsername(request))
             .build();
     }
+
+    @PostMapping("/set-ramdom-username")
+    ApiResponse<UserPublicResponse> setRandomUsername(@RequestBody @Valid UsernameRandomAddRequest request){
+        return ApiResponse.<UserPublicResponse>builder()
+            .result(userService.addRandomUsername(request))
+            .build();
+    }
+
+    @GetMapping("/exist/{username}")
+    ApiResponse<Boolean> existUsername(@PathVariable String username){
+        return ApiResponse.<Boolean>builder()
+            .result(userService.usernameExist(username))
+            .build();
+    }
+
+    @PostMapping("/avatars")
+    ApiResponse<UserPublicResponse> setAvatar(
+        @RequestParam("avatarFile") MultipartFile avatarFile
+    ) throws B2Exception, IOException{
+        return ApiResponse.<UserPublicResponse>builder()
+            .result(userService.setAvatar(avatarFile))
+            .build();
+    }
+
+    @GetMapping("/avatars")
+    ApiResponse<String> getAvatar(){
+        return ApiResponse.<String>builder()
+            .result(userService.getAvatar())
+            .build();
+    }
+
+
     
     
     

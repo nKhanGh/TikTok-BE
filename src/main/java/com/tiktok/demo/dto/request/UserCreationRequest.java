@@ -27,7 +27,6 @@ public class UserCreationRequest {
 
     @Email
     String email;
-    String avatarUrl;
     String bio;
     LocalDate dob;
 }
