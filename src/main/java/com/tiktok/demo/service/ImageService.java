@@ -1,22 +1,16 @@
 package com.tiktok.demo.service;
 
 import java.io.IOException;
-import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.backblaze.b2.client.B2ListFileNamesIterable;
-import com.backblaze.b2.client.B2ListFilesIterable;
 import com.backblaze.b2.client.B2StorageClient;
 import com.backblaze.b2.client.contentSources.B2ByteArrayContentSource;
 import com.backblaze.b2.client.contentSources.B2ContentSource;
 import com.backblaze.b2.client.exceptions.B2Exception;
 import com.backblaze.b2.client.structures.B2Bucket;
-import com.backblaze.b2.client.structures.B2DeleteFileVersionRequest;
-import com.backblaze.b2.client.structures.B2ListFileNamesRequest;
-import com.backblaze.b2.client.structures.B2ListFileNamesResponse;
 import com.backblaze.b2.client.structures.B2UploadFileRequest;
 
 import lombok.AccessLevel;
@@ -24,8 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+
 
 @Service
 @RequiredArgsConstructor

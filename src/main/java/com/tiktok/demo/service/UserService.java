@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.backblaze.b2.client.exceptions.B2Exception;
-import com.nimbusds.jose.proc.SecurityContext;
 import com.tiktok.demo.dto.request.UserCreationRequest;
 import com.tiktok.demo.dto.request.UserUpdateRequest;
 import com.tiktok.demo.dto.request.UsernameAddRequest;
@@ -63,6 +62,7 @@ public class UserService {
         user.setRoles(new HashSet<>(roles));
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setDeleted(false);
+        user.setAvatarUrl("https://f003.backblazeb2.com/file/tiktokImages14102005/default_avatar.jpg");
         user.setVerified(isVerified);
         user.setCreatedAt(LocalDateTime.now());
 
@@ -78,6 +78,7 @@ public class UserService {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
         user.setUsername(request.getUsername());
+        user.setAvatarUrl("https://f003.backblazeb2.com/file/tiktokImages14102005/default_avatar.jpg");
         return userMapper.toUserPublicResponse(userRepository.save(user));
     }
 
@@ -212,7 +213,7 @@ public class UserService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        if(user.getAvatarUrl() != null && user.getAvatarFileId() != null){
+        if(user.getAvatarFileId() != null){
             imageService.deleteImage(user.getAvatarUrl(), user.getAvatarFileId());
         }
         user.setAvatarUrl(avatar[0]);
@@ -225,7 +226,7 @@ public class UserService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        if(user.getAvatarUrl() == null) return "/images/default_avatar.jpg";
+        if(user.getAvatarUrl() == null) return "api/images/default_avatar.jpg";
         return imageService.getImage(user.getAvatarUrl());
     }
 }

@@ -3,7 +3,6 @@ package com.tiktok.demo.service;
 import java.util.Date;
 import java.util.List;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 

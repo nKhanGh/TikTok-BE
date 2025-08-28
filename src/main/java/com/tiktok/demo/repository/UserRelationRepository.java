@@ -8,8 +8,6 @@ import org.springframework.stereotype.Repository;
 import com.tiktok.demo.entity.UserRelation;
 import com.tiktok.demo.entity.id.UserRelationId;
 
-import java.util.List;
-
 import com.tiktok.demo.entity.User;
 
 

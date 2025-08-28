@@ -1,7 +1,6 @@
 package com.tiktok.demo.dto.response;
 
 import java.util.Date;
-import java.util.Set;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

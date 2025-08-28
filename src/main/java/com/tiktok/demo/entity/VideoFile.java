@@ -1,7 +1,9 @@
-package com.tiktok.demo.dto.request;
+package com.tiktok.demo.entity;
 
-import java.util.List;
+import java.util.Date;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,9 +16,11 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class VideoRequest {
+@Entity
+public class VideoFile {
+    String videoFileName;
+    @Id
     String videoFileId;
-    String caption;
-    String musicId;
-    List<String> hashtags;
+    boolean isPosted;
+    Date uploadAt;
 }

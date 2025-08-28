@@ -1,8 +1,6 @@
 package com.tiktok.demo.service;
 
 import java.io.IOException;
-import java.net.URI;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -13,22 +11,16 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.backblaze.b2.client.B2StorageClient;
-import com.backblaze.b2.client.contentSources.B2ByteArrayContentSource;
-import com.backblaze.b2.client.contentSources.B2ContentSource;
 import com.backblaze.b2.client.exceptions.B2Exception;
-import com.backblaze.b2.client.structures.B2Bucket;
-import com.backblaze.b2.client.structures.B2DownloadAuthorization;
-import com.backblaze.b2.client.structures.B2GetDownloadAuthorizationRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectAclRequest;
-import com.backblaze.b2.client.structures.B2UploadFileRequest;
+import com.tiktok.demo.dto.request.VideoRequest;
 import com.tiktok.demo.dto.response.VideoResponse;
 import com.tiktok.demo.entity.Hashtag;
 import com.tiktok.demo.entity.Music;
 import com.tiktok.demo.entity.User;
 import com.tiktok.demo.entity.Video;
+import com.tiktok.demo.entity.VideoFile;
 import com.tiktok.demo.entity.VideoSignedUrl;
 import com.tiktok.demo.exception.AppException;
 import com.tiktok.demo.exception.ErrorCode;
@@ -43,13 +35,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
@@ -62,34 +47,16 @@ public class VideoService {
     VideoSignedUrlRepository videoSignedUrlRepository;
     MusicRepository musicRepository;
     UserRepository userRepository;
-    @NonFinal
-    @Value("${b2.videoBucketName}")
-    String bucketName;
 
-    B2StorageClient b2StorageClient;
-
-    S3Presigner s3Presigner;
     VideoMapper videoMapper;
 
     HashtagService hashtagService;
+    VideoFileService videoFileService;
 
-    public String uploadVideo(MultipartFile videoFile) throws B2Exception, IOException {
-        String fileName = System.currentTimeMillis() + "_" + videoFile.getOriginalFilename();
-        B2Bucket bucket = b2StorageClient.getBucketOrNullByName(bucketName);
-        if (bucket == null) {
-            throw new RuntimeException("Bucket not found.");
-        }
-        B2ContentSource source = B2ByteArrayContentSource.build(videoFile.getBytes());
-        B2UploadFileRequest request = B2UploadFileRequest
-                .builder(bucket.getBucketId(), fileName, videoFile.getContentType(), source).build();
-        b2StorageClient.uploadSmallFile(request);
-        return fileName;
-    }
-
-    public VideoResponse createVideo(MultipartFile videoFile, String caption, String musicId, List<String> hashtags)
+    public VideoResponse createVideo(VideoRequest request)
             throws B2Exception, IOException {
-        Music music = musicId != null
-                ? musicRepository.findById(musicId)
+        Music music = request.getMusicId() != null
+                ? musicRepository.findById(request.getMusicId())
                         .orElseThrow(() -> new AppException(ErrorCode.MUSIC_NOT_EXISTED))
                 : null;
 
@@ -98,15 +65,18 @@ public class VideoService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Set<Hashtag> setHashtags = new HashSet<>();
-        hashtags.forEach(tag -> {
-            Hashtag hashtag = hashtagService.handleCreateHashtag(tag);
-            setHashtags.add(hashtag);
-        });
+        if(request.getHashtags() != null)
+            request.getHashtags().forEach(tag -> {
+                Hashtag hashtag = hashtagService.handleCreateHashtag(tag);
+                setHashtags.add(hashtag);
+            });
+
+        VideoFile videoFile = videoFileService.getVideo(request.getVideoFileId());
 
         Video video = Video.builder()
                 .music(music)
-                .caption(caption)
-                .videoFileName(uploadVideo(videoFile))
+                .caption(request.getCaption())
+                .videoFile(videoFile)
                 .viewCount(0)
                 .likeCount(0)
                 .commentCount(0)
@@ -115,29 +85,21 @@ public class VideoService {
                 .hashtags(setHashtags)
                 .userPost(user)
                 .build();
-
+        
         return videoMapper.toVideoResponse(videoRepository.save(video));
     }
 
     public String viewVideo(String id) {
         Video video = videoRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VIDEO_NOT_EXISTED));
-        String fileName = video.getVideoFileName();
+        String fileName = video.getVideoFile().getVideoFileName();
         video.setViewCount(video.getViewCount() + 1);
         var videoSignedUrl = videoSignedUrlRepository.findByVideoId(id);
         if (videoSignedUrl.isPresent() && videoSignedUrl.get().getExpireAt().after(new Date())) {
             return videoSignedUrl.get().getSignedUrl();
         }
 
-        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofHours(1))
-                .getObjectRequest(gor -> gor
-                    .bucket(bucketName)
-                    .key(fileName)
-                    .build())
-                .build();
-
-        String tempUrl = s3Presigner.presignGetObject(presignRequest).url().toString();
+        String tempUrl = videoFileService.getVideoUrl(fileName);
         VideoSignedUrl newVideoSignedUrl = VideoSignedUrl.builder()
                 .createdAt(new Date())
                 .expireAt(new Date(Instant.now().plus(3600, ChronoUnit.SECONDS).toEpochMilli()))
@@ -158,7 +120,7 @@ public class VideoService {
         return videoMapper.toVideoResponse(video);
     }
 
-    public void deleteVideo(String id) {
+    public void deleteVideo(String id) throws B2Exception {
         Video video = videoRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.VIDEO_NOT_EXISTED));
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -167,7 +129,10 @@ public class VideoService {
 
         if (!isAdmin && !username.equals(video.getUserPost().getUsername()))
             throw new AppException(ErrorCode.UNAUTHORIZED);
+        
+        VideoFile videoFile = video.getVideoFile();
 
+        videoFileService.deleteVideo(videoFile.getVideoFileName(), videoFile.getVideoFileId());
         videoRepository.deleteById(id);
     }
 

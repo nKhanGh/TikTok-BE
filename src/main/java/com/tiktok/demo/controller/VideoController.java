@@ -11,9 +11,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.backblaze.b2.client.exceptions.B2Exception;
 import com.tiktok.demo.dto.ApiResponse;
+import com.tiktok.demo.dto.request.VideoRequest;
 import com.tiktok.demo.dto.response.VideoResponse;
 
 import java.io.IOException;
@@ -22,7 +24,6 @@ import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 
@@ -34,14 +35,9 @@ public class VideoController {
     VideoService videoService;
 
     @PostMapping
-    ApiResponse<VideoResponse> createVideo(
-        @RequestParam("videoFile") MultipartFile videoFile,
-        @RequestParam("caption") String caption,
-        @RequestParam(value="musicId", required=false) String musicId,
-        @RequestParam(value="hashtags", required=false) List<String> hashtags
-    ) throws B2Exception, IOException{
+    ApiResponse<VideoResponse> createVideo(@RequestBody VideoRequest request) throws B2Exception, IOException{
         return ApiResponse.<VideoResponse>builder()
-            .result(videoService.createVideo(videoFile, caption, musicId, hashtags))
+            .result(videoService.createVideo(request))
             .build();
     }
 
@@ -60,7 +56,7 @@ public class VideoController {
     }
 
     @DeleteMapping("/{videoId}")
-    ApiResponse deleteVideo(@PathVariable String videoId){
+    ApiResponse deleteVideo(@PathVariable String videoId) throws B2Exception{
         videoService.deleteVideo(videoId);
         return ApiResponse.builder()
             .message("Video has been deleted!")

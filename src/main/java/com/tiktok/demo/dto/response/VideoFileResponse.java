@@ -1,6 +1,6 @@
-package com.tiktok.demo.dto.request;
+package com.tiktok.demo.dto.response;
 
-import java.util.List;
+import java.util.Date;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -13,10 +13,10 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class VideoRequest {
+@FieldDefaults(level= AccessLevel.PRIVATE)
+public class VideoFileResponse {
+    String videoFileName;
     String videoFileId;
-    String caption;
-    String musicId;
-    List<String> hashtags;
+    boolean isPosted;
+    Date uploadAt;
 }

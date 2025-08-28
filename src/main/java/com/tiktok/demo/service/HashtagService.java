@@ -2,7 +2,6 @@ package com.tiktok.demo.service;
 
 import java.util.List;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import com.tiktok.demo.dto.request.HashtagRequest;

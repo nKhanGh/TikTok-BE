@@ -13,6 +13,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class VideoCreationRequest {
-    String videoUrl;
+    String videoFileId;
     String caption;
 }

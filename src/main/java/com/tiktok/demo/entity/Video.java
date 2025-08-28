@@ -3,7 +3,7 @@ package com.tiktok.demo.entity;
 import java.util.Date;
 import java.util.Set;
 
-
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,7 +30,10 @@ public class Video {
     @Id
     @GeneratedValue(strategy=GenerationType.UUID)
     String id;
-    String videoFileName;
+
+    @OneToOne(cascade=CascadeType.ALL)
+    VideoFile videoFile;
+    
     String caption;
     int viewCount;
     int likeCount;
