@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -92,6 +93,26 @@ public class UserController {
             .build();
     }
 
+    @PutMapping("/updatePublic")
+    ApiResponse<UserPublicResponse> updatePublicUser(
+        @RequestParam(value = "avatarFile", required=false) MultipartFile avatarFile,
+        @RequestParam("username") String username,
+        @RequestParam("name") String name,
+        @RequestParam("bio") String bio
+    ) throws B2Exception, IOException{
+        return ApiResponse.<UserPublicResponse>builder()
+            .result(userService.updatePublicUser(avatarFile, username, name, bio))
+            .build();
+    }
+
+    @PostMapping("/existed/{username}")
+    ApiResponse<Boolean> existedByUsername(@PathVariable String username){
+        return ApiResponse.<Boolean>builder()
+            .result(userService.existByUsername(username))
+            .build();
+    }
+    
+
     @DeleteMapping("/{userId}")
     ApiResponse<String> deleteUser(@PathVariable String userId){
         userService.deleteUser(userId);
@@ -121,13 +142,6 @@ public class UserController {
     ApiResponse<UserPublicResponse> setUsername(@RequestBody @Valid UsernameAddRequest request){
         return ApiResponse.<UserPublicResponse>builder()
             .result(userService.addUsername(request))
-            .build();
-    }
-
-    @PostMapping("/set-ramdom-username")
-    ApiResponse<UserPublicResponse> setRandomUsername(@RequestBody @Valid UsernameRandomAddRequest request){
-        return ApiResponse.<UserPublicResponse>builder()
-            .result(userService.addRandomUsername(request))
             .build();
     }
 

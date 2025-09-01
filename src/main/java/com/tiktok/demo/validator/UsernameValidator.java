@@ -11,7 +11,7 @@ public class UsernameValidator implements ConstraintValidator<UsernameConstraint
             buildConstraint(context, "USERNAME_EMPTY");
             return false;
         }
-        if(username.length() < 4 || username.length() > 24) {
+        if(username.length() < 8 || username.length() > 20) {
             buildConstraint(context, "USERNAME_LENGTH");
             return false;
         }
@@ -21,10 +21,6 @@ public class UsernameValidator implements ConstraintValidator<UsernameConstraint
             return false;
         } 
             
-        if(!username.matches("[a-zA-Z0-9._]+")){
-            buildConstraint(context, "USERNAME_CHARACTER");
-            return false;
-        } 
         boolean hasLetter = username.chars().anyMatch(Character::isLetter);
         boolean hasDigit = username.chars().anyMatch(Character::isDigit);
         if(!hasLetter || !hasDigit){

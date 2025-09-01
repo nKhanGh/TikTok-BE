@@ -39,12 +39,13 @@
         TOO_MANY_ATTEMPS(1028, "There are too many attemps on this verification code!", HttpStatus.BAD_REQUEST),
         VERIFY_CODE_NOT_TRUE(1029, "Verification code is expired or incorrect. Try again.", HttpStatus.BAD_REQUEST),
         USERNAME_EMPTY(1030, "Username cannot be empty.", HttpStatus.BAD_REQUEST),
-        USERNAME_LENGTH(1031, "Username's length must be from 4 to 24 character.", HttpStatus.BAD_REQUEST),
+        USERNAME_LENGTH(1031, "Username must have at least 4 characters.", HttpStatus.BAD_REQUEST),
         USERNAME_FIRST_CHAR(1032, "Username's first character must be letter.", HttpStatus.BAD_REQUEST),
-        USERNAME_CHARACTER(1033, "Username's character must be letter, digit, (_) and (.).", HttpStatus.BAD_REQUEST),
         USERNAME_DIGIT_LETTER(1034, "Username must have both digit and character", HttpStatus.BAD_REQUEST),
         VIDEO_SIGNED_URL(1035, "Video signed url does not exist", HttpStatus.BAD_REQUEST),
         PASSWORD_NOT_TRUE(1036, "Password is not true!", HttpStatus.BAD_REQUEST),
+        PASSWORD_LENGTH(1037, "Password's length must be from 8 to 20 characters!", HttpStatus.BAD_REQUEST),
+        PASSWORD_CHAR(1037, "Password must have digit, letter and special character!", HttpStatus.BAD_REQUEST),
         ;
 
         private int code;

@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserRegisterResonse {
+public class UserRegisterResponse {
     boolean result = true;
+    String userId;
 }

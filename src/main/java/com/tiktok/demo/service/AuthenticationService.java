@@ -5,11 +5,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.StringJoiner;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -38,7 +38,7 @@ import com.tiktok.demo.dto.response.IntrospectResponse;
 import com.tiktok.demo.dto.response.LogoutResponse;
 import com.tiktok.demo.dto.response.RefreshTokenResponse;
 import com.tiktok.demo.dto.response.UserPrivateResponse;
-import com.tiktok.demo.dto.response.UserRegisterResonse;
+import com.tiktok.demo.dto.response.UserRegisterResponse;
 import com.tiktok.demo.entity.InvalidatedToken;
 import com.tiktok.demo.entity.User;
 import com.tiktok.demo.exception.AppException;
@@ -62,6 +62,8 @@ public class AuthenticationService {
     UserRepository userRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
 
+    PasswordEncoder passwordEncoder;
+
     EmailService emailService;
 
     @NonFinal
@@ -79,8 +81,10 @@ public class AuthenticationService {
     public AuthenticationResponse login(AuthenticationRequest request){
         var user = userRepository.findByUsernameOrEmail(request.getUsernameOrEmail(), request.getUsernameOrEmail())
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        Boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+            log.info(request.getUsernameOrEmail());
+            log.info(request.getPassword());
+        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        log.info(authenticated ? "aaa" :"bbb");
         if(!authenticated)
             throw new AppException(ErrorCode.PASSWORD_NOT_TRUE);
         String token = generateToken(user);
@@ -96,7 +100,7 @@ public class AuthenticationService {
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
             .jwtID(UUID.randomUUID().toString())
             .issuer("tiktok.com")
-            .subject(user.getUsername() != null ? user.getUsername() : user.getEmail())
+            .subject(user.getId())
             .issueTime(new Date())
             .expirationTime(new Date(
                 Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
@@ -138,7 +142,6 @@ public class AuthenticationService {
             verifyToken(token, false);
         } catch (Exception e) {
             valid = false;
-            log.info("No");
         }
 
         return IntrospectResponse.builder().valid(valid).build();
@@ -195,11 +198,10 @@ public class AuthenticationService {
             valid = false;
         }
         if(!valid) throw new AppException(ErrorCode.UNAUTHENTICATED);
-
-        String username = signedJWT.getJWTClaimsSet().getSubject();
+        String userId = signedJWT.getJWTClaimsSet().getSubject();
         String id = signedJWT.getJWTClaimsSet().getJWTID();
         Date expiryDate = signedJWT.getJWTClaimsSet().getExpirationTime();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         String newToken = generateToken(user);
         InvalidatedToken invalidatedToken = InvalidatedToken.builder()
             .id(id)
@@ -219,28 +221,48 @@ public class AuthenticationService {
         });
     }
 
-    public UserRegisterResonse register(UserRegisterRequest request){
+    String generateUsername(){
+        Random random = new Random();
+        String username;
+        do{
+            long number = Math.abs(random.nextLong() % 1_000_000_0000L);
+            username = "User" + number;
+        } while (userRepository.existsByUsername(username));
+
+        return username;
+    }
+
+    public UserRegisterResponse register(UserRegisterRequest request){
         var user = userRepository.findByEmail(request.getToEmail());
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        String userId;
         if(user.isPresent() ){
             if(user.get().isVerified())
                 throw new AppException(ErrorCode.EMAIL_EXISTED);
             else{
                 user.get().setPassword(passwordEncoder.encode(request.getPassword()));
                 user.get().setDob(request.getDob());
+                userId = user.get().getId();
                 userRepository.save(user.get());
             }
         } else {
-            userService.createUser(UserCreationRequest.builder()
+            String username = generateUsername();
+            UserPrivateResponse response = userService.createUser(UserCreationRequest.builder()
                 .email(request.getToEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .password(request.getPassword())
+                .username(username)
+                .name(username)
                 .dob(request.getDob())
+                .bio("No bio yet.")
                 .build()
             , false);
+            userId = response.getId();
         }
         emailService.sendVerificationCode(request);
 
-        return UserRegisterResonse.builder().result(true).build();
+        return UserRegisterResponse.builder()
+            .result(true)
+            .userId(userId)
+            .build();
     }
 
     public EmailVerifyResponse verifyEmail(EmailVerifyRequest request){

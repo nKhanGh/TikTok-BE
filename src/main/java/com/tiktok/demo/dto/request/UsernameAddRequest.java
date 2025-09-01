@@ -17,10 +17,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level =AccessLevel.PRIVATE)
 public class UsernameAddRequest {
-    @Email
-    @NotBlank(message="EMAIL_INVALID")
-    String email;
-
     @UsernameConstraint
     String username;
 }

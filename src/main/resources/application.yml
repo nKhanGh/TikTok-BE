@@ -6,8 +6,8 @@ server:
 spring:
     servlet:
         multipart:
-            max-file-size: 20MB
-            max-request-size: 20MB
+            max-file-size: 100MB
+            max-request-size: 100MB
         
     profiles:
         active: dev
@@ -48,5 +48,5 @@ b2:
     imageBucketId: ${BUCKET_IMAGE_ID}
 
 jwt:
-    valid-duration: 3000
-    refreshable-duration: 10000
+    valid-duration: 18000
+    refreshable-duration: 100000

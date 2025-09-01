@@ -30,7 +30,7 @@ public class ImageService {
     @Value("${b2.imageBucketName}")
     String bucketName;
 
-    static String endPoint = "https://s3.eu-central-003.backblazeb2.com";
+    static String endPoint = "https://f003.backblazeb2.com/file";
 
     B2StorageClient b2StorageClient;
 

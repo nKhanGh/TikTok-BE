@@ -2,6 +2,8 @@ package com.tiktok.demo.dto.request;
 
 import java.time.LocalDate;
 
+import com.tiktok.demo.validator.PasswordConstraint;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -19,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 public class UserRegisterRequest {
     @NotBlank(message="EMAIL_INVALID")
     String toEmail;
-    @Size(min=8, message="PASSWORD_INVALID")
+    @PasswordConstraint
     String password;
     LocalDate dob;
 }

@@ -8,11 +8,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.backblaze.b2.client.B2StorageClient;
 import com.backblaze.b2.client.exceptions.B2Exception;
 import com.tiktok.demo.dto.request.VideoRequest;
 import com.tiktok.demo.dto.response.VideoResponse;
@@ -33,10 +31,7 @@ import com.tiktok.demo.repository.VideoSignedUrlRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -60,8 +55,8 @@ public class VideoService {
                         .orElseThrow(() -> new AppException(ErrorCode.MUSIC_NOT_EXISTED))
                 : null;
 
-        String usernamePost = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(usernamePost)
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Set<Hashtag> setHashtags = new HashSet<>();
@@ -89,11 +84,12 @@ public class VideoService {
         return videoMapper.toVideoResponse(videoRepository.save(video));
     }
 
-    public String viewVideo(String id) {
+    public String viewVideo(String id, boolean isIncreaseViewCount) {
         Video video = videoRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VIDEO_NOT_EXISTED));
         String fileName = video.getVideoFile().getVideoFileName();
-        video.setViewCount(video.getViewCount() + 1);
+        if(isIncreaseViewCount)
+            video.setViewCount(video.getViewCount() + 1);
         var videoSignedUrl = videoSignedUrlRepository.findByVideoId(id);
         if (videoSignedUrl.isPresent() && videoSignedUrl.get().getExpireAt().after(new Date())) {
             return videoSignedUrl.get().getSignedUrl();
@@ -123,11 +119,11 @@ public class VideoService {
     public void deleteVideo(String id) throws B2Exception {
         Video video = videoRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.VIDEO_NOT_EXISTED));
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+        String userId = authentication.getName();
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ADMIN_DELETE_VIDEO"));
 
-        if (!isAdmin && !username.equals(video.getUserPost().getUsername()))
+        if (!isAdmin && !userId.equals(video.getUserPost().getId()))
             throw new AppException(ErrorCode.UNAUTHORIZED);
         
         VideoFile videoFile = video.getVideoFile();
@@ -137,8 +133,8 @@ public class VideoService {
     }
 
     public String likeVideo(String id) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         Video video = videoRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VIDEO_NOT_EXISTED));

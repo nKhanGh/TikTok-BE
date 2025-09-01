@@ -70,10 +70,8 @@ public class UserService {
     }
 
     public UserPublicResponse addUsername(UsernameAddRequest request){
-        if(!request.getEmail().equals(SecurityContextHolder.getContext().getAuthentication().getName()))
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        User user = userRepository.findByEmail(request.getEmail())
-            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         if(userRepository.existsByUsername(request.getUsername())){
             throw new AppException(ErrorCode.USER_EXISTED);
         }
@@ -125,17 +123,17 @@ public class UserService {
 
     public UserPublicResponse getMyInfo(){
         var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
+        String userId = context.getAuthentication().getName();
 
-        User user = userRepository.findByUsername(name)
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         return userMapper.toUserPublicResponse(user);
     }
 
 
     public String addFollowStatus(String userId, String followStatus){
-        String usernameFollow = SecurityContextHolder.getContext().getAuthentication().getName();
-        User userFollow = userRepository.findByUsername(usernameFollow)
+        String idUserFollow = SecurityContextHolder.getContext().getAuthentication().getName();
+        User userFollow = userRepository.findById(idUserFollow)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         User userFollowed = userRepository.findById(userId)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -184,34 +182,10 @@ public class UserService {
         return userRepository.existsByUsername(username);
     }
 
-    String generateUsername(){
-        Random random = new Random();
-        String username;
-        do{
-            long number = Math.abs(random.nextLong() % 1_000_000_0000L);
-            username = "User" + number;
-        } while (userRepository.existsByUsername(username));
-
-        return username;
-    }
-
-    public UserPublicResponse addRandomUsername(UsernameRandomAddRequest request){
-        String ownEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        String reqEmail = request.getEmail();
-        if(!ownEmail.equals(reqEmail))
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        String username = generateUsername();
-        User user = userRepository.findByEmail(ownEmail)
-            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        user.setUsername(username);
-        userRepository.save(user);
-        return userMapper.toUserPublicResponse(user);
-    }
-
     public UserPublicResponse setAvatar(MultipartFile avatarFile) throws B2Exception, IOException{
         String[] avatar = imageService.uploadImage(avatarFile);
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         if(user.getAvatarFileId() != null){
             imageService.deleteImage(user.getAvatarUrl(), user.getAvatarFileId());
@@ -223,10 +197,37 @@ public class UserService {
     }
 
     public String getAvatar(){
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         if(user.getAvatarUrl() == null) return "api/images/default_avatar.jpg";
         return imageService.getImage(user.getAvatarUrl());
+    }
+
+    public UserPublicResponse updatePublicUser(MultipartFile avatarFile, String username, String name, String bio) throws B2Exception, IOException{
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if(!username.equals(user.getUsername()) && userRepository.existsByUsername(username))
+            throw new AppException(ErrorCode.USER_EXISTED);
+    
+        if(user.getAvatarFileId() != null)
+            imageService.deleteImage(user.getAvatarUrl(), user.getAvatarFileId());
+        if(avatarFile != null){
+            String[] avatar = imageService.uploadImage(avatarFile);
+            user.setAvatarFileId(avatar[1]);
+            user.setAvatarUrl(avatar[0]);
+        }
+        user.setUsername(username);
+        user.setName(name);
+        user.setBio(bio);
+        return userMapper.toUserPublicResponse(userRepository.save(user));
+    }
+
+    public boolean existByUsername(String username){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if(username.equals(user.getUsername())) return false;
+        return userRepository.existsByUsername(username);
     }
 }

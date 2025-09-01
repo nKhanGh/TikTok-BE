@@ -23,6 +23,7 @@ import com.tiktok.demo.dto.response.VideoFileResponse;
 
 
 
+
 @RestController
 @RequestMapping("/videoFiles")
 @RequiredArgsConstructor
@@ -38,5 +39,11 @@ public class VideoFileController {
             .result(videoFileService.uploadVideo(videoFile))
             .build();
     }
+    // @GetMapping("/upload-progress/{sessionId}")
+    // ApiResponse<UploadProgress> getProgress(@PathVariable String sessionId){
+    //     return ApiResponse.<UploadProgress>builder()
+    //         .result(progressTracker.getProgress(sessionId))
+    //         .build();
+    // }
     
 }

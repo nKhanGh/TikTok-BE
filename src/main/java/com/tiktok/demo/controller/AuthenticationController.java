@@ -30,7 +30,7 @@ import com.tiktok.demo.dto.response.IntrospectResponse;
 import com.tiktok.demo.dto.response.LogoutResponse;
 import com.tiktok.demo.dto.response.RefreshTokenResponse;
 import com.tiktok.demo.dto.response.UserPrivateResponse;
-import com.tiktok.demo.dto.response.UserRegisterResonse;
+import com.tiktok.demo.dto.response.UserRegisterResponse;
 
 
 @RestController
@@ -69,8 +69,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    ApiResponse<UserRegisterResonse> register(@RequestBody @Valid UserRegisterRequest request){
-        return ApiResponse.<UserRegisterResonse>builder()
+    ApiResponse<UserRegisterResponse> register(@RequestBody @Valid UserRegisterRequest request){
+        return ApiResponse.<UserRegisterResponse>builder()
             .result(authenticationService.register(request))
             .build();
     }

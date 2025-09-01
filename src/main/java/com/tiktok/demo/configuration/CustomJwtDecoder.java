@@ -5,6 +5,7 @@ import java.util.Objects;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -19,16 +20,21 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
-@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal=true)
+@Slf4j
 public class CustomJwtDecoder implements JwtDecoder{
     @NonFinal
     @Value("${jwt.signerKey}")
     String signerKey;
 
     AuthenticationService authenticationService;
+
+    public CustomJwtDecoder(@Lazy AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
+    }
 
     @NonFinal
     NimbusJwtDecoder nimbusJwtDecoder = null;

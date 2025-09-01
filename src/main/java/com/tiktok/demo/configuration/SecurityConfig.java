@@ -27,7 +27,7 @@ public class SecurityConfig {
     CustomAccessDeniedHandler customAccessDeniedHandler;
 
     static String[] publicEndPointPost = {
-        "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", 
+        "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refreshToken", 
         "/emails/sender/verifyCode", "emails/verify",
         "/auth/register", "/auth/verify-email"
     };
