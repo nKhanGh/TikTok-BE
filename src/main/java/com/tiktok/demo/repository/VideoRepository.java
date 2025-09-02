@@ -9,7 +9,7 @@ import com.tiktok.demo.entity.Video;
 
 @Repository
 public interface VideoRepository extends JpaRepository<Video, String>{
-    List<Video> findByMusic_id(String musicId);
-    List<Video> findByUserPost_id(String userId);
-    List<Video> findByHashtags_id(String hashtagId);
+    List<Video> findByMusicId(String musicId);
+    List<Video> findByUserPostId(String userId);
+    List<Video> findByHashtagsId(String hashtagId);
 }

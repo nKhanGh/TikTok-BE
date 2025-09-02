@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.backblaze.b2.client.exceptions.B2Exception;
 import com.tiktok.demo.dto.request.VideoRequest;
@@ -80,8 +81,17 @@ public class VideoService {
                 .hashtags(setHashtags)
                 .userPost(user)
                 .build();
+        videoRepository.save(video);
+        String tempUrl = videoFileService.getVideoUrl(videoFile.getVideoFileName());
+        VideoSignedUrl newVideoSignedUrl = VideoSignedUrl.builder()
+                .createdAt(new Date())
+                .expireAt(new Date(Instant.now().plus(16, ChronoUnit.HOURS).toEpochMilli()))
+                .videoId(video.getId())
+                .signedUrl(tempUrl)
+                .build();
+        videoSignedUrlRepository.save(newVideoSignedUrl);
         
-        return videoMapper.toVideoResponse(videoRepository.save(video));
+        return videoMapper.toVideoResponse(video);
     }
 
     public String viewVideo(String id, boolean isIncreaseViewCount) {
@@ -98,7 +108,7 @@ public class VideoService {
         String tempUrl = videoFileService.getVideoUrl(fileName);
         VideoSignedUrl newVideoSignedUrl = VideoSignedUrl.builder()
                 .createdAt(new Date())
-                .expireAt(new Date(Instant.now().plus(3600, ChronoUnit.SECONDS).toEpochMilli()))
+                .expireAt(new Date(Instant.now().plus(16, ChronoUnit.HOURS).toEpochMilli()))
                 .videoId(id)
                 .signedUrl(tempUrl)
                 .build();
@@ -157,4 +167,25 @@ public class VideoService {
     // String sort, int page, int size){
 
     // }
+
+    public List<String> getVideoByUser(String userId){
+        List<Video> videos = videoRepository.findByUserPostId(userId);
+        return videos.stream().map(Video::getId).toList();
+    }
+
+    @Transactional
+    public void refreshVideoSignedUrls(){
+        Date threshold = Date.from(Instant.now().plus(5, ChronoUnit.HOURS));
+        List<VideoSignedUrl> signedUrls = videoSignedUrlRepository.findByExpireAtBefore(threshold);
+        signedUrls.forEach(signedUrl -> {
+            Video video = videoRepository.findById(signedUrl.getVideoId())
+                .orElseThrow(() -> new AppException(ErrorCode.VIDEO_NOT_EXISTED));
+            String tmpUrl = videoFileService.getVideoUrl(video.getVideoFile().getVideoFileName());
+            signedUrl.setSignedUrl(tmpUrl);
+            signedUrl.setCreatedAt(new Date());
+            signedUrl.setExpireAt(new Date(Instant.now().plus(16, ChronoUnit.HOURS).toEpochMilli()));
+        });
+
+        videoSignedUrlRepository.saveAll(signedUrls);
+    }
 }

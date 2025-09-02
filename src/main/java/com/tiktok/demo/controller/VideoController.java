@@ -19,11 +19,20 @@ import com.tiktok.demo.dto.request.VideoRequest;
 import com.tiktok.demo.dto.response.VideoResponse;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
+import org.eclipse.angus.mail.iap.Response;
+import org.springframework.core.io.InputStreamSource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -84,9 +93,27 @@ public class VideoController {
     @PostMapping("/{videoId}/view")
     ApiResponse<String> viewVideo(@PathVariable String videoId) throws B2Exception{
         return ApiResponse.<String>builder()
-            .result(videoService.viewVideo(videoId))
+            .result(videoService.viewVideo(videoId, true))
             .build();
     }
+
+    @GetMapping("/public/{videoId}/get")
+    ResponseEntity<Void> getVideoUrl(@PathVariable String videoId){
+        String signedUrl = videoService.viewVideo(videoId, false);
+        return ResponseEntity.status(302)
+            .header(HttpHeaders.LOCATION, signedUrl)
+            .build();
+    }
+
+    @GetMapping("/public/byUser/{userId}")
+    ApiResponse<List<String>> getVideoByUser(@PathVariable String userId){
+        return ApiResponse.<List<String>>builder()
+            .result(videoService.getVideoByUser(userId))
+            .build();
+    }
+    
+    
+    
     
     
     
