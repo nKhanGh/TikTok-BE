@@ -1,4 +1,6 @@
-package com.tiktok.demo.dto.request;
+package com.tiktok.demo.dto.response;
+
+import java.util.List;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -11,8 +13,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class CommentRequest {
-    String content;
-    String parentCommentId;
+@FieldDefaults(level=AccessLevel.PRIVATE)
+public class VideoPageResponse {
+    List<String> videoIds;
+    long nextCursor;
+    boolean hasMore;
 }

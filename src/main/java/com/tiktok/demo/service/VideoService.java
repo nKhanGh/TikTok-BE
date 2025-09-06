@@ -8,12 +8,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backblaze.b2.client.exceptions.B2Exception;
 import com.tiktok.demo.dto.request.VideoRequest;
+import com.tiktok.demo.dto.response.VideoPageResponse;
 import com.tiktok.demo.dto.response.VideoResponse;
 import com.tiktok.demo.entity.Hashtag;
 import com.tiktok.demo.entity.Music;
@@ -51,6 +53,8 @@ public class VideoService {
 
     public VideoResponse createVideo(VideoRequest request)
             throws B2Exception, IOException {
+        log.info(request.getHashtags().toString());
+        log.info(request.getCaption());
         Music music = request.getMusicId() != null
                 ? musicRepository.findById(request.getMusicId())
                         .orElseThrow(() -> new AppException(ErrorCode.MUSIC_NOT_EXISTED))
@@ -90,7 +94,7 @@ public class VideoService {
                 .signedUrl(tempUrl)
                 .build();
         videoSignedUrlRepository.save(newVideoSignedUrl);
-        
+        log.info(video.toString());
         return videoMapper.toVideoResponse(video);
     }
 
@@ -149,16 +153,17 @@ public class VideoService {
         Video video = videoRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.VIDEO_NOT_EXISTED));
         String message;
-        if (video.getUserLiked().contains(user)) {
-            video.getUserLiked().remove(user);
+        Set<User> userLiked = video.getUserLiked();
+        if (userLiked.contains(user)) {
+            userLiked.remove(user);
             video.setLikeCount(video.getLikeCount() - 1);
             message = "You have unliked this video!";
         } else {
-            video.getUserLiked().add(user);
+            userLiked.add(user);
             video.setLikeCount(video.getLikeCount() + 1);
             message = "You have just liked this video!";
         }
-
+        video.setUserLiked(userLiked);
         videoRepository.save(video);
         return message;
     }
@@ -168,9 +173,31 @@ public class VideoService {
 
     // }
 
-    public List<String> getVideoByUser(String userId){
-        List<Video> videos = videoRepository.findByUserPostId(userId);
+    public List<String> getVideoByUser(String username){
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        List<Video> videos = videoRepository.findByUserPostId(user.getId());
         return videos.stream().map(Video::getId).toList();
+    }
+    
+    public VideoPageResponse getVideoByUser(String username, int cursor, int limit){
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        List<Video> videos = videoRepository
+            .findByUserPostIdOrderByCreateAtAsc(user.getId(), PageRequest.of(cursor/limit, limit));
+        List<String> videoIds = videos.stream().map(Video::getId).toList();
+
+        int total = videoRepository.countByUserPostId(user.getId());
+        int nextCursor = cursor + videoIds.size();
+        log.info(cursor + "");
+        log.info(nextCursor + "");
+        boolean hasMore = nextCursor < total;
+        return VideoPageResponse.builder()
+            .videoIds(videoIds)
+            .hasMore(hasMore)
+            .nextCursor(nextCursor)
+            .build();
+
     }
 
     @Transactional
@@ -183,7 +210,7 @@ public class VideoService {
             String tmpUrl = videoFileService.getVideoUrl(video.getVideoFile().getVideoFileName());
             signedUrl.setSignedUrl(tmpUrl);
             signedUrl.setCreatedAt(new Date());
-            signedUrl.setExpireAt(new Date(Instant.now().plus(16, ChronoUnit.HOURS).toEpochMilli()));
+            signedUrl.setExpireAt(new Date(Instant.now().plus(10, ChronoUnit.HOURS).toEpochMilli()));
         });
 
         videoSignedUrlRepository.saveAll(signedUrls);

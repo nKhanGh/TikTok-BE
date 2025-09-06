@@ -2,6 +2,7 @@ package com.tiktok.demo.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,8 @@ public interface VideoRepository extends JpaRepository<Video, String>{
     List<Video> findByMusicId(String musicId);
     List<Video> findByUserPostId(String userId);
     List<Video> findByHashtagsId(String hashtagId);
+
+    List<Video> findByUserPostIdOrderByCreateAtAsc(String userId, Pageable pageable);
+
+    int countByUserPostId(String userId);
 }

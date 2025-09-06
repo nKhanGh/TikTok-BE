@@ -100,6 +100,7 @@ public class UserController {
         @RequestParam("name") String name,
         @RequestParam("bio") String bio
     ) throws B2Exception, IOException{
+        log.info("kHang00");
         return ApiResponse.<UserPublicResponse>builder()
             .result(userService.updatePublicUser(avatarFile, username, name, bio))
             .build();
@@ -129,12 +130,19 @@ public class UserController {
     }
 
     @PostMapping("/{userId}/{action}")
-    ApiResponse followUser(
+    ApiResponse<?> followUser(
         @PathVariable String userId,
         @PathVariable String action
     ){
         return ApiResponse.builder()
             .message(userService.addFollowStatus(userId, action))
+            .build();
+    }
+
+    @GetMapping("/isFollow/{userId}")
+    ApiResponse<Boolean> isFollow(@PathVariable String userId){
+        return ApiResponse.<Boolean>builder()
+            .result(userService.isFollow(userId))
             .build();
     }
 

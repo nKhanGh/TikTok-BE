@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.tiktok.demo.dto.response.VideoPageResponse;
+
 
 
 
@@ -57,7 +59,7 @@ public class VideoController {
             .build();
     }
 
-    @GetMapping("/{videoId}")
+    @GetMapping("/public/{videoId}")
     ApiResponse<VideoResponse> getVideo(@PathVariable String videoId){
         return ApiResponse.<VideoResponse>builder()
             .result(videoService.getVideo(videoId))
@@ -90,7 +92,7 @@ public class VideoController {
             .build();
     }
 
-    @PostMapping("/{videoId}/view")
+    @PostMapping("/public/{videoId}/view")
     ApiResponse<String> viewVideo(@PathVariable String videoId) throws B2Exception{
         return ApiResponse.<String>builder()
             .result(videoService.viewVideo(videoId, true))
@@ -105,12 +107,26 @@ public class VideoController {
             .build();
     }
 
-    @GetMapping("/public/byUser/{userId}")
-    ApiResponse<List<String>> getVideoByUser(@PathVariable String userId){
+    @GetMapping("/public/byUser/{username}")
+    ApiResponse<List<String>> getVideoByUser(@PathVariable String username){
         return ApiResponse.<List<String>>builder()
-            .result(videoService.getVideoByUser(userId))
+            .result(videoService.getVideoByUser(username))
             .build();
     }
+
+    //limit: sum element of 1 page
+    //cursor: order of next element
+    @GetMapping("/public/byUser/{username}/paged")
+    ApiResponse<VideoPageResponse> getVideoByUser(
+        @PathVariable String username,
+        @RequestParam(defaultValue="0") int cursor,
+        @RequestParam(defaultValue="20") int limit
+    ){
+        return ApiResponse.<VideoPageResponse>builder()
+            .result(videoService.getVideoByUser(username, cursor, limit))
+            .build();
+    }
+    
     
     
     

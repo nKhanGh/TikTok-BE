@@ -4,10 +4,14 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.tiktok.demo.dto.request.CommentRequest;
+import com.tiktok.demo.dto.response.CommentPageResponse;
 import com.tiktok.demo.dto.response.CommentResponse;
 import com.tiktok.demo.entity.Comment;
 import com.tiktok.demo.entity.User;
@@ -22,10 +26,12 @@ import com.tiktok.demo.repository.VideoRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal=true)
+@Slf4j
 public class CommentService {
     CommentRepository commentRepository;
     VideoRepository videoRepository;
@@ -33,12 +39,12 @@ public class CommentService {
 
     CommentMapper commentMapper;
 
-    public CommentResponse createComment(CommentRequest request){
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
+    public CommentResponse createComment(String videoId, CommentRequest request){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        Video video = videoRepository.findById(request.getVideoId())
+        Video video = videoRepository.findById(videoId)
             .orElseThrow(() -> new AppException(ErrorCode.VIDEO_NOT_EXISTED));
 
         Comment parentComment = null;
@@ -46,9 +52,14 @@ public class CommentService {
         if(parentId != null && !parentId.equals("")){
             parentComment = commentRepository.findById(parentId)
                 .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_EXISTED));
-            if(!parentComment.getVideo().getId().equals(request.getVideoId()))
+            if(!parentComment.getVideo().getId().equals(videoId))
                 throw new AppException(ErrorCode.COMMENT_CONFLICT);
+            parentComment.setRepliesCount(parentComment.getRepliesCount() + 1);
+            commentRepository.save(parentComment);
         }
+
+        video.setCommentCount(video.getCommentCount() + 1);
+        videoRepository.save(video);
 
         Comment comment = commentMapper.toComment(request);
         comment.setUserPost(user);
@@ -57,12 +68,41 @@ public class CommentService {
         comment.setParentComment(parentComment);
         comment.setUserLiked(new HashSet<>());
         comment.setCreateAt(new Date());
+        comment.setRepliesCount(0);
         return commentMapper.toCommentResponse(commentRepository.save(comment));
     }
 
-    public List<CommentResponse> getCommentsByVideo(String videoId){
-        return commentRepository.findByVideo_id(videoId)
+    public CommentPageResponse getCommentsByVideo(String videoId, int page, int size){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("repliesCount").descending());
+        List<CommentResponse> comments =  commentRepository.findByVideoIdAndParentCommentNull(videoId, pageable)
             .stream().map(commentMapper::toCommentResponse).toList();
+        int num = commentRepository.countByVideoId(videoId);
+        int nextpage = num <= (page+1)*size ? page: page + 1;
+        boolean hasMore = num > (page + 1) * size;
+
+        return CommentPageResponse.builder()
+            .comments(comments)
+            .nextPage(nextpage)
+            .hasMore(hasMore)
+            .numComments(num)
+            .build();
+    }
+
+    public CommentPageResponse getRepliesOfComment(String commentId, int page, int size){
+        if(!commentRepository.existsById(commentId))
+            throw new AppException(ErrorCode.COMMENT_NOT_EXISTED);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("repliesCount"));
+        List<CommentResponse> comments = commentRepository.findByParentCommentId(commentId, pageable)
+            .stream().map(commentMapper::toCommentResponse).toList();
+        int num = commentRepository.countByParentCommentId(commentId);
+        boolean hasMore = (page + 1)*size < num;
+        int nextPage = hasMore ? page + 1: page;
+        return CommentPageResponse.builder()
+            .comments(comments)
+            .hasMore(hasMore)
+            .nextPage(nextPage)
+            .build();
+            
     }
 
     public void deleteComment(String id){

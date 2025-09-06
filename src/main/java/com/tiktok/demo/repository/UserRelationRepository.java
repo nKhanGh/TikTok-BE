@@ -14,4 +14,5 @@ import com.tiktok.demo.entity.User;
 @Repository
 public interface UserRelationRepository extends JpaRepository<UserRelation, UserRelationId>{
     Optional<UserRelation> findByUserFollowAndUserFollowed(User userFollow, User userFollowed);
+    Optional<UserRelation> findByUserFollowIdAndUserFollowedId(String userFollowId, String userFollowedId);
 }

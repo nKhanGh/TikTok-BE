@@ -172,6 +172,12 @@ public class UserService {
         return message;
     }
 
+    public boolean isFollow(String userId){
+        String id = SecurityContextHolder.getContext().getAuthentication().getName();
+        var relation = userRelationRepository.findByUserFollowIdAndUserFollowedId(id, userId);
+        return relation.isPresent() && relation.get().getStatus().equals(FollowStatus.FOLLOW);
+    }
+
     public void deleteNotVerifiedUser(){
         LocalDateTime threshold = LocalDateTime.now().minusMinutes(1);
         List<User> notVerifiedUsers = userRepository.findAllByIsVerifiedFalseAndCreatedAtBefore(threshold);
@@ -195,6 +201,7 @@ public class UserService {
         userRepository.save(user);
         return userMapper.toUserPublicResponse(user);
     }
+
 
     public String getAvatar(){
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();

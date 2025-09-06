@@ -23,5 +23,6 @@ public class CommentResponse {
     CommentResponse parentComment;
     Date createAt;
     int likeCount;
+    int repliesCount;   
     Set<UserPublicResponse> userLiked;
 }

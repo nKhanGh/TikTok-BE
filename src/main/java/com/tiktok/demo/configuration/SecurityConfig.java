@@ -33,7 +33,7 @@ public class SecurityConfig {
     };
 
     static String[] publicEndpointGet = {
-        "/users/exist/**", "/images/**", "/videos/public/**"
+        "/users/exist/**", "/images/**", "/videos/public/**", "/comments/**"
     };
 
     @Bean

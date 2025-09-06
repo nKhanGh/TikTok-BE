@@ -35,18 +35,26 @@ public class ImageService {
     B2StorageClient b2StorageClient;
 
     public String[] uploadImage(MultipartFile imageFile) throws B2Exception, IOException{
-        String filename = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
+        log.info("kHang");
+        String originalFilename = imageFile.getOriginalFilename();
+        String filename = System.currentTimeMillis() + "_" 
+            + originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
+        log.info("kHang2");
         B2Bucket bucket = b2StorageClient.getBucketOrNullByName(bucketName);
         if (bucket == null) {
             throw new RuntimeException("Bucket not found.");
         }
+        log.info("kHang3");
 
         B2ContentSource source = B2ByteArrayContentSource.build(imageFile.getBytes());
         B2UploadFileRequest request = B2UploadFileRequest
             .builder(bucket.getBucketId(), filename, imageFile.getContentType(), source)
             .build();
+        log.info("kHang4");
         String fileId = b2StorageClient.uploadSmallFile(request).getFileId();
+        log.info("kHang5");
         String fileUrl = endPoint + "/" + bucketName + "/" + filename;
+        log.info("kHang6");
         return new String[]{fileUrl, fileId};
     }
 

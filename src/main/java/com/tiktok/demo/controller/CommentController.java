@@ -20,6 +20,9 @@ import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.tiktok.demo.dto.response.CommentPageResponse;
 
 
 
@@ -30,17 +33,32 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class CommentController {
     CommentService commentService;
 
-    @PostMapping
-    ApiResponse<CommentResponse> createComment(@RequestBody CommentRequest request){
+    @PostMapping("/{videoId}")
+    ApiResponse<CommentResponse> createComment(@PathVariable String videoId, @RequestBody CommentRequest request){
         return ApiResponse.<CommentResponse>builder()
-            .result(commentService.createComment(request))
+            .result(commentService.createComment(videoId, request))
             .build();
     }
 
     @GetMapping("/byVideo/{videoId}")
-    ApiResponse<List<CommentResponse>> getCommentsByVideo(@PathVariable String videoId){
-        return ApiResponse.<List<CommentResponse>>builder()
-            .result(commentService.getCommentsByVideo(videoId))
+    ApiResponse<CommentPageResponse> getCommentsByVideo(
+        @PathVariable String videoId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20")int size
+    ){
+        return ApiResponse.<CommentPageResponse>builder()
+            .result(commentService.getCommentsByVideo(videoId, page, size))
+            .build();
+    }
+
+    @GetMapping("/replies/{commentId}")
+    ApiResponse<CommentPageResponse> getRepliesOfComment(
+        @PathVariable String commentId,
+        @RequestParam(defaultValue="0") int page,
+        @RequestParam(defaultValue="3") int size
+    ){
+        return ApiResponse.<CommentPageResponse>builder()
+            .result(commentService.getRepliesOfComment(commentId, page, size))
             .build();
     }
 
