@@ -22,8 +22,8 @@ public class UploadProgress {
     String error = null;
 
     public String getFomattedSize() {
-        return String.format("%.2f MB / %.2f MB",
-            uploadedBytes / 1024.0 / 1024.0, 
-            totalBytes / 1024.0 / 1024.0);
+        return "%.2f MB / %.2f MB".formatted(
+                uploadedBytes / 1024.0 / 1024.0,
+                totalBytes / 1024.0 / 1024.0);
     }
 }

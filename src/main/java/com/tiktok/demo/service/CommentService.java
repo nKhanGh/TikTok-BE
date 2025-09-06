@@ -49,7 +49,7 @@ public class CommentService {
 
         Comment parentComment = null;
         String parentId = request.getParentCommentId();
-        if(parentId != null && !parentId.equals("")){
+        if(parentId != null && !parentId.isEmpty()){
             parentComment = commentRepository.findById(parentId)
                 .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_EXISTED));
             if(!parentComment.getVideo().getId().equals(videoId))

@@ -1,11 +1,14 @@
     package com.tiktok.demo.exception;
 
+    import lombok.AccessLevel;
+    import lombok.experimental.FieldDefaults;
     import org.springframework.http.HttpStatus;
     import org.springframework.http.HttpStatusCode;
 
     import lombok.Getter;
 
     @Getter
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     public enum ErrorCode {
         UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error!", HttpStatus.INTERNAL_SERVER_ERROR),
         INVALID_KEY(9998, "Invalid message key!", HttpStatus.BAD_REQUEST),
@@ -46,11 +49,13 @@
         PASSWORD_NOT_TRUE(1036, "Password is not true!", HttpStatus.BAD_REQUEST),
         PASSWORD_LENGTH(1037, "Password's length must be from 8 to 20 characters!", HttpStatus.BAD_REQUEST),
         PASSWORD_CHAR(1037, "Password must have digit, letter and special character!", HttpStatus.BAD_REQUEST),
+        BUCKET_NOT_FOUND(1038, "Internal Error: Bucket not Found", HttpStatus.NOT_FOUND),
+        IMAGE_ERROR(1039, "Some Error with Image", HttpStatus.BAD_REQUEST),
         ;
 
-        private int code;
-        private String message;
-        private HttpStatusCode statusCode;
+        int code;
+        String message;
+        HttpStatusCode statusCode;
 
         ErrorCode(int code, String message, HttpStatusCode statusCode) {
             this.code = code;

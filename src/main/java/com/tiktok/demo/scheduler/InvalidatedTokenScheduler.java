@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 @Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal=true)
+@SuppressWarnings("unused")
 public class InvalidatedTokenScheduler {
     AuthenticationService authenticationService;
 

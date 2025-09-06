@@ -7,7 +7,7 @@ public class UsernameValidator implements ConstraintValidator<UsernameConstraint
 
     @Override
     public boolean isValid(String username, ConstraintValidatorContext context) {
-        if(username.equals("")) {
+        if(username.isEmpty()) {
             buildConstraint(context, "USERNAME_EMPTY");
             return false;
         }

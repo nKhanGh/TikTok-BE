@@ -3,6 +3,7 @@ package com.tiktok.demo.service;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -24,14 +25,16 @@ import lombok.experimental.FieldDefaults;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal=true)
+@Slf4j
 public class EmailService {
     JavaMailSender javaMailSender;
     StringRedisTemplate redisTemplate;
+    Random random = new Random();
+
 
     String generate6Digit(String email){
-        Random random = new Random();
         int number = random.nextInt(1000000);
-        String code = String.format("%06d",number);
+        String code = "%06d".formatted(number);
         redisTemplate.opsForValue().set("OTP:" + email, code, 5, TimeUnit.MINUTES);
         redisTemplate.opsForValue().set("OTP_ATTEMPS:" + email, "0", 5, TimeUnit.MINUTES);
         return code;
@@ -47,7 +50,7 @@ public class EmailService {
             helper.setText(request.getBody());
             javaMailSender.send(message);
         } catch (MessagingException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
@@ -61,7 +64,7 @@ public class EmailService {
             helper.setText("");
             javaMailSender.send(message);
         } catch (MessagingException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 

@@ -5,8 +5,9 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +20,6 @@ import com.backblaze.b2.client.exceptions.B2Exception;
 import com.tiktok.demo.dto.request.UserCreationRequest;
 import com.tiktok.demo.dto.request.UserUpdateRequest;
 import com.tiktok.demo.dto.request.UsernameAddRequest;
-import com.tiktok.demo.dto.request.UsernameRandomAddRequest;
 import com.tiktok.demo.dto.response.UserPrivateResponse;
 import com.tiktok.demo.dto.response.UserPublicResponse;
 import com.tiktok.demo.entity.User;
@@ -37,6 +37,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import main.java.com.tiktok.demo.dto.response.UserRelationPageResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -149,14 +150,15 @@ public class UserService {
         }
         var oldRelation = userRelationRepository.findById(userRelationId);
         String message;
+        String endMessage = "ed this user!";
         if(oldRelation.isPresent()){
             if(status.equals(oldRelation.get().getStatus())){
                 userRelationRepository.deleteById(userRelationId);
-                message = "You have un" + followStatus.toLowerCase() + "ed this user!";
+                message = "You have un" + followStatus.toLowerCase() + endMessage;
             } else {
                 oldRelation.get().setStatus(status);
                 userRelationRepository.save(oldRelation.get());
-                message = "You have " + followStatus.toLowerCase() + "ed this user!";
+                message = "You have " + followStatus.toLowerCase() + endMessage;
             }
         } else {
             UserRelation userRelation = UserRelation.builder()
@@ -236,5 +238,28 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         if(username.equals(user.getUsername())) return false;
         return userRepository.existsByUsername(username);
+    }
+
+    public UserRelationPageResponse getFollowedUser(int page, int size){
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!userRepository.existsById(userId))
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        Pageable pageable = PageRequest.of(page, size);
+        List<UserRelation> relations = userRelationRepository.findByUserFollowId(userId, pageable);
+        List<User> followedUsers = relations.stream()
+            .map(relation -> userRepository.findById(relation.getUserFollowed().getId())
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED)))
+            .toList();
+
+        List<UserPublicResponse> response = followedUsers.stream().map(userMapper::toUserPublicResponse).toList();
+        int total = userRelationRepository.countByUserFollowId(userId);
+        boolean hasMore = (page + 1) * size > total;
+        int nextPage = hasMore ? page + 1 : page;
+
+        return UserRelationPageResponse.builder()
+            .followedUsers(response)
+            .hasMore(hasMore)
+            .nextPage(nextPage)
+            .build();
     }
 }

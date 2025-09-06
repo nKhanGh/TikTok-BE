@@ -25,7 +25,6 @@ import com.tiktok.demo.exception.AppException;
 import com.tiktok.demo.exception.ErrorCode;
 import com.tiktok.demo.mapper.VideoFileMapper;
 import com.tiktok.demo.repository.VideoFileRepository;
-import com.tiktok.demo.repository.VideoRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -58,7 +57,7 @@ public class VideoFileService {
         String fileName = System.currentTimeMillis() + "_" + videoFile.getOriginalFilename();
         B2Bucket bucket = b2StorageClient.getBucketOrNullByName(bucketName);
         if (bucket == null) {
-            throw new RuntimeException("Bucket not found.");
+            throw new AppException(ErrorCode.BUCKET_NOT_FOUND);
         }
         B2ContentSource source = B2ByteArrayContentSource.build(videoFile.getBytes());
         B2UploadFileRequest request = B2UploadFileRequest

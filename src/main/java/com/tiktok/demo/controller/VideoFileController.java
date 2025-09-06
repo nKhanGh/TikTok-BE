@@ -33,7 +33,7 @@ public class VideoFileController {
 
     @PostMapping
     ApiResponse<VideoFileResponse> uploadVideo(
-        @RequestParam("videoFile") MultipartFile videoFile
+        @RequestParam MultipartFile videoFile
     ) throws B2Exception, IOException{
         return ApiResponse.<VideoFileResponse>builder()
             .result(videoFileService.uploadVideo(videoFile))

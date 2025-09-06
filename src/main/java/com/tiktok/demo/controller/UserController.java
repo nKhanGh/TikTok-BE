@@ -36,6 +36,9 @@ import com.tiktok.demo.dto.request.UserUpdateRequest;
 import com.tiktok.demo.dto.request.UsernameAddRequest;
 import com.tiktok.demo.dto.request.UsernameRandomAddRequest;
 import com.tiktok.demo.dto.response.UserPublicResponse;
+import com.tiktok.demo.entity.UserRelation;
+
+import main.java.com.tiktok.demo.dto.response.UserRelationPageResponse;
 
 
 
@@ -95,10 +98,10 @@ public class UserController {
 
     @PutMapping("/updatePublic")
     ApiResponse<UserPublicResponse> updatePublicUser(
-        @RequestParam(value = "avatarFile", required=false) MultipartFile avatarFile,
-        @RequestParam("username") String username,
-        @RequestParam("name") String name,
-        @RequestParam("bio") String bio
+        @RequestParam(required=false) MultipartFile avatarFile,
+        @RequestParam String username,
+        @RequestParam String name,
+        @RequestParam String bio
     ) throws B2Exception, IOException{
         log.info("kHang00");
         return ApiResponse.<UserPublicResponse>builder()
@@ -162,7 +165,7 @@ public class UserController {
 
     @PostMapping("/avatars")
     ApiResponse<UserPublicResponse> setAvatar(
-        @RequestParam("avatarFile") MultipartFile avatarFile
+        @RequestParam MultipartFile avatarFile
     ) throws B2Exception, IOException{
         return ApiResponse.<UserPublicResponse>builder()
             .result(userService.setAvatar(avatarFile))
@@ -176,6 +179,15 @@ public class UserController {
             .build();
     }
 
+    @GetMapping("/followed")
+    ApiResponse<UserRelationPageResponse> getFollowedUser(
+        @RequestParam(defaultValue="0") int page,
+        @RequestParam(defaultValue="5") int size
+    ){
+        return ApiResponse.<UserRelationPageResponse>builder()
+            .result(userService.getFollowedUser(page, size))
+            .build();
+    }
 
     
     

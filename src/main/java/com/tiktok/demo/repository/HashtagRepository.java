@@ -10,5 +10,4 @@ import java.util.Optional;
 @Repository
 public interface HashtagRepository extends JpaRepository<Hashtag, String>{
     Optional<Hashtag> findByTag(String tag);
-    boolean existsByTag(String tag);
 }

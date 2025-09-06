@@ -1,6 +1,5 @@
 package com.tiktok.demo.service;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -51,8 +50,7 @@ public class VideoService {
     HashtagService hashtagService;
     VideoFileService videoFileService;
 
-    public VideoResponse createVideo(VideoRequest request)
-            throws B2Exception, IOException {
+    public VideoResponse createVideo(VideoRequest request) {
         log.info(request.getHashtags().toString());
         log.info(request.getCaption());
         Music music = request.getMusicId() != null
@@ -168,10 +166,6 @@ public class VideoService {
         return message;
     }
 
-    // public Page<VideoResponse> getVideosByFilter(String hashtag, String musicId,
-    // String sort, int page, int size){
-
-    // }
 
     public List<String> getVideoByUser(String username){
         User user = userRepository.findByUsername(username)
@@ -189,8 +183,6 @@ public class VideoService {
 
         int total = videoRepository.countByUserPostId(user.getId());
         int nextCursor = cursor + videoIds.size();
-        log.info(cursor + "");
-        log.info(nextCursor + "");
         boolean hasMore = nextCursor < total;
         return VideoPageResponse.builder()
             .videoIds(videoIds)

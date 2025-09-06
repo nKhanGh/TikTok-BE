@@ -2,6 +2,8 @@ package com.tiktok.demo.service;
 
 import java.io.IOException;
 
+import com.tiktok.demo.exception.AppException;
+import com.tiktok.demo.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,12 +39,14 @@ public class ImageService {
     public String[] uploadImage(MultipartFile imageFile) throws B2Exception, IOException{
         log.info("kHang");
         String originalFilename = imageFile.getOriginalFilename();
+        if(originalFilename == null)
+            throw new AppException(ErrorCode.IMAGE_ERROR);
         String filename = System.currentTimeMillis() + "_" 
             + originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
         log.info("kHang2");
         B2Bucket bucket = b2StorageClient.getBucketOrNullByName(bucketName);
         if (bucket == null) {
-            throw new RuntimeException("Bucket not found.");
+            throw new AppException(ErrorCode.BUCKET_NOT_FOUND);
         }
         log.info("kHang3");
 

@@ -64,19 +64,21 @@ public class AuthenticationService {
 
     PasswordEncoder passwordEncoder;
 
+    Random random = new Random();
+
     EmailService emailService;
 
     @NonFinal
     @Value("${jwt.signerKey}")
-    protected String SIGNER_KEY;
+    protected String signerKey;
 
     @NonFinal
     @Value("${jwt.refreshable-duration}")
-    protected long REFRESHABLE_DURATION;
+    protected long refreshableDuration;
 
     @NonFinal
     @Value("${jwt.valid-duration}")
-    protected long VALID_DURATION;
+    protected long validDuration;
 
     public AuthenticationResponse login(AuthenticationRequest request){
         var user = userRepository.findByUsernameOrEmail(request.getUsernameOrEmail(), request.getUsernameOrEmail())
@@ -103,7 +105,7 @@ public class AuthenticationService {
             .subject(user.getId())
             .issueTime(new Date())
             .expirationTime(new Date(
-                Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
+                Instant.now().plus(validDuration, ChronoUnit.SECONDS).toEpochMilli()
             ))
             .claim("scope", buildScope(user))
             .build();
@@ -114,10 +116,10 @@ public class AuthenticationService {
         JWSObject jwsObject = new JWSObject(jwsHeader, payload);
 
         try {
-            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+            jwsObject.sign(new MACSigner(signerKey.getBytes()));
             return jwsObject.serialize();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
 
         }
         
@@ -148,7 +150,7 @@ public class AuthenticationService {
     }
 
     SignedJWT verifyToken(String token, boolean isRefresh) throws ParseException, JOSEException{
-        JWSVerifier jwsVerifier = new MACVerifier(SIGNER_KEY.getBytes());
+        JWSVerifier jwsVerifier = new MACVerifier(signerKey.getBytes());
 
         SignedJWT signedJWT = SignedJWT.parse(token);
 
@@ -157,7 +159,7 @@ public class AuthenticationService {
                     .getJWTClaimsSet()
                     .getIssueTime()
                     .toInstant()
-                    .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                    .plus(refreshableDuration, ChronoUnit.SECONDS)
                     .toEpochMilli()
             )
             : signedJWT.getJWTClaimsSet().getExpirationTime();
@@ -188,7 +190,7 @@ public class AuthenticationService {
             .build();
     }
 
-    public RefreshTokenResponse refreshToken(RefreshTokenRequest request) throws ParseException, JOSEException{
+    public RefreshTokenResponse refreshToken(RefreshTokenRequest request) throws ParseException{
         String token = request.getToken();
         SignedJWT signedJWT = null;
         boolean valid = true;
@@ -216,13 +218,12 @@ public class AuthenticationService {
 
     public void removeInvalidatedToken(){
         List<InvalidatedToken> invalidatedTokens = invalidatedTokenRepository.findByExpiryDateBefore(new Date());
-        invalidatedTokens.forEach((invalidatedToken) -> {
-            invalidatedTokenRepository.deleteById(invalidatedToken.getId());
-        });
+        invalidatedTokens.forEach(invalidatedToken ->
+            invalidatedTokenRepository.deleteById(invalidatedToken.getId())
+        );
     }
 
     String generateUsername(){
-        Random random = new Random();
         String username;
         do{
             long number = Math.abs(random.nextLong() % 1_000_000_0000L);

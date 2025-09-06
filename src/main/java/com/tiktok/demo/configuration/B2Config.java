@@ -16,7 +16,7 @@ public class B2Config {
     String applicationKey;
 
     @Bean
-    public B2StorageClient b2StorageClient() {
+    B2StorageClient b2StorageClient() {
         return B2StorageClientFactory.createDefaultFactory().create(keyId, applicationKey, "myTiktok");
     }
 }

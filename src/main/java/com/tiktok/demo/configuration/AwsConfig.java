@@ -21,7 +21,7 @@ public class AwsConfig {
     String applicationKey;
 
     @Bean
-    public S3Presigner s3Presigner(){
+    S3Presigner s3Presigner(){
         AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(keyId, applicationKey);
         return S3Presigner.builder()
             .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
