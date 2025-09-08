@@ -2,8 +2,6 @@ package com.tiktok.demo.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +21,7 @@ import jakarta.validation.Valid;
 
 
 
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/emails")
 @RequiredArgsConstructor
@@ -36,15 +35,15 @@ public class EmailController {
     ApiResponse sendEmail(@RequestBody @Valid EmailRequest request){
         emailService.sendEmail(request);
         return ApiResponse.builder()
-            .message("Email has been sended!")
+            .message("Email has been sent!")
             .build();       
     }
 
     @PostMapping("/sender/verifyCode")
-    ApiResponse sendVerificationCode(@RequestBody @Valid UserRegisterRequest request){
+    ApiResponse<Void> sendVerificationCode(@RequestBody @Valid UserRegisterRequest request){
         emailService.sendVerificationCode(request);
-        return ApiResponse.builder()
-            .message("Verification code has been sended!")
+        return ApiResponse.<Void>builder()
+            .message("Verification code has been sent!")
             .build();
     }
 

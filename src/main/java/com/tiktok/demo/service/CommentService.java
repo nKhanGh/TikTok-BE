@@ -73,16 +73,20 @@ public class CommentService {
     }
 
     public CommentPageResponse getCommentsByVideo(String videoId, int page, int size){
-        Pageable pageable = PageRequest.of(page, size, Sort.by("repliesCount").descending());
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Order.desc("repliesCount"), Sort.Order.asc("id")));
         List<CommentResponse> comments =  commentRepository.findByVideoIdAndParentCommentNull(videoId, pageable)
             .stream().map(commentMapper::toCommentResponse).toList();
+        int numParent = commentRepository.countByVideoIdAndParentCommentIdNull(videoId);
         int num = commentRepository.countByVideoId(videoId);
-        int nextpage = num <= (page+1)*size ? page: page + 1;
-        boolean hasMore = num > (page + 1) * size;
+        boolean hasMore = numParent > (page + 1) * size;
+        int nextPage = hasMore ? page + 1: page;
 
         return CommentPageResponse.builder()
             .comments(comments)
-            .nextPage(nextpage)
+            .nextPage(nextPage)
             .hasMore(hasMore)
             .numComments(num)
             .build();

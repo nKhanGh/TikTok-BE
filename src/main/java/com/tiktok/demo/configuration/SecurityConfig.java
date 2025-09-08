@@ -1,5 +1,8 @@
 package com.tiktok.demo.configuration;
 
+import com.tiktok.demo.security.oauth2.CustomOauth2UserService;
+import com.tiktok.demo.security.oauth2.OAuth2LoginSuccessHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -7,8 +10,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,6 +23,7 @@ import lombok.experimental.FieldDefaults;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal=true)
+@Slf4j
 public class SecurityConfig {
     CustomJwtDecoder jwtDecoder;
     CustomAccessDeniedHandler customAccessDeniedHandler;
@@ -29,15 +31,18 @@ public class SecurityConfig {
     static String[] publicEndPointPost = {
         "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refreshToken", 
         "/emails/sender/verifyCode", "emails/verify",
-        "/auth/register", "/auth/verify-email"
+        "/auth/register", "/auth/verify-email",
     };
 
     static String[] publicEndpointGet = {
-        "/users/exist/**", "/images/**", "/videos/public/**", "/comments/**"
+        "/users/exist/**", "/images/**", "/videos/public/**", "/comments/**",
+            "/users/public/**", "/oauth2/**", "/login/oauth2/**"
     };
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+    SecurityFilterChain filterChain(HttpSecurity http,
+                                    OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
+                                    CustomOauth2UserService customOauth2UserService) throws Exception{
 
         http.authorizeHttpRequests(request -> request
             .requestMatchers(HttpMethod.POST, publicEndPointPost).permitAll()
@@ -52,6 +57,14 @@ public class SecurityConfig {
             .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
         );
 
+        http.oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo -> userInfo.userService(customOauth2UserService))
+                .successHandler(oAuth2LoginSuccessHandler)
+                .failureHandler((request, response, exception) -> {
+                    log.error("OAuth2 login failed", exception);
+                    response.sendRedirect("http://localhost:3000/auth/error?error=" + exception.getMessage());
+                })
+        );
         http.exceptionHandling(exceptionHandlingCustomizer -> exceptionHandlingCustomizer
             .accessDeniedHandler(customAccessDeniedHandler));
 
@@ -70,9 +83,5 @@ public class SecurityConfig {
 
         return jwtAuthenticationConverter;
     }
-
-    @Bean
-    PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder(10);
-    }
 }
+

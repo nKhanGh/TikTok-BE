@@ -37,6 +37,7 @@ import com.tiktok.demo.dto.response.UserRegisterResponse;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal=true)
+@SuppressWarnings("unused")
 public class AuthenticationController {
     AuthenticationService authenticationService;
 
@@ -62,7 +63,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refreshToken")
-    ApiResponse<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) throws ParseException, JOSEException{
+    ApiResponse<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) throws ParseException{
         return ApiResponse.<RefreshTokenResponse>builder()
             .result(authenticationService.refreshToken(request))
             .build();

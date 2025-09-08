@@ -53,6 +53,7 @@ public class UserService {
     UserMapper userMapper;    
 
     ImageService imageService;
+    VideoService videoService;
 
     public UserPrivateResponse createUser(UserCreationRequest request, boolean isVerified){
         if(request.getUsername() != null && userRepository.existsByUsername(request.getUsername()))
@@ -129,6 +130,25 @@ public class UserService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         return userMapper.toUserPublicResponse(user);
+    }
+
+    public UserPublicResponse getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        UserPublicResponse userResponse = userMapper.toUserPublicResponse(user);
+        int totalLike = videoService.getTotalLikeCount(user.getId());
+        List<UserRelation> followers = userRelationRepository.findByUserFollowedId(user.getId());
+        int followerCount = (int) followers.stream()
+                .filter(follower -> follower.getStatus().equals(FollowStatus.FOLLOW))
+                .count();
+        List<UserRelation> followings = userRelationRepository.findByUserFollowId(user.getId());
+        int followingCount = (int) followings.stream()
+                .filter(following -> following.getStatus().equals(FollowStatus.FOLLOW))
+                .count();
+        userResponse.setFollowerCount(followerCount);
+        userResponse.setFollowingCount(followingCount);
+        userResponse.setLikeCount(totalLike);
+        return userResponse;
     }
 
 
@@ -253,7 +273,7 @@ public class UserService {
 
         List<UserPublicResponse> response = followedUsers.stream().map(userMapper::toUserPublicResponse).toList();
         int total = userRelationRepository.countByUserFollowId(userId);
-        boolean hasMore = (page + 1) * size > total;
+        boolean hasMore = (page + 1) * size < total;
         int nextPage = hasMore ? page + 1 : page;
 
         return UserRelationPageResponse.builder()

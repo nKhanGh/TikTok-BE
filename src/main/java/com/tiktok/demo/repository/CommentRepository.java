@@ -15,5 +15,7 @@ public interface CommentRepository extends JpaRepository<Comment, String>{
 
     int countByVideoId(String videoId);
 
+    int countByVideoIdAndParentCommentIdNull(String videoId);
+
     int countByParentCommentId(String commentId);
 }

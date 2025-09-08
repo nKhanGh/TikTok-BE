@@ -15,8 +15,6 @@ import com.tiktok.demo.dto.request.CommentRequest;
 import com.tiktok.demo.dto.response.CommentResponse;
 import com.tiktok.demo.service.CommentService;
 
-import java.util.List;
-
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +24,7 @@ import com.tiktok.demo.dto.response.CommentPageResponse;
 
 
 
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/comments")
 @RequiredArgsConstructor
@@ -63,9 +62,9 @@ public class CommentController {
     }
 
     @DeleteMapping("/{commentId}")
-    ApiResponse<?> deleteComment(@PathVariable String commentId){
+    ApiResponse<Void> deleteComment(@PathVariable String commentId){
         commentService.deleteComment(commentId);
-        return ApiResponse.builder()
+        return ApiResponse.<Void>builder()
             .message("Comment has been deleted!")
             .build();
     }
@@ -81,8 +80,8 @@ public class CommentController {
     
 
     @PostMapping("/{commentId}/like")
-    ApiResponse likeComment(@PathVariable String commentId){
-        return ApiResponse.builder()
+    ApiResponse<Void> likeComment(@PathVariable String commentId){
+        return ApiResponse.<Void>builder()
             .message(commentService.likeComment(commentId))
             .build();
     }

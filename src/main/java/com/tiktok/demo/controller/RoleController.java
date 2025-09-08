@@ -28,6 +28,7 @@ import com.tiktok.demo.dto.request.RoleRequest;
 import org.springframework.web.bind.annotation.PutMapping;
 
 
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/roles")
 @RequiredArgsConstructor

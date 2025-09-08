@@ -20,10 +20,9 @@ import com.tiktok.demo.dto.response.HashtagResponse;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
-
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/hashtags")
 @RequiredArgsConstructor

@@ -18,4 +18,7 @@ public class UserPublicResponse {
     String name;
     String avatarUrl;
     String bio;
+    int followingCount;
+    int followerCount;
+    int likeCount;
 }

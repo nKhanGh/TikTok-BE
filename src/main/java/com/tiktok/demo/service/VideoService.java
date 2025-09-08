@@ -189,7 +189,13 @@ public class VideoService {
             .hasMore(hasMore)
             .nextCursor(nextCursor)
             .build();
+    }
 
+    public int getTotalLikeCount(String userId){
+        List<Video> videos = videoRepository.findByUserPostId(userId);
+        if(videos == null)
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        return videos.stream().map(Video::getLikeCount).reduce(0, Integer::sum);
     }
 
     @Transactional

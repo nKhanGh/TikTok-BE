@@ -21,10 +21,9 @@ import com.tiktok.demo.dto.request.MusicRequest;
 import com.tiktok.demo.dto.response.MusicResponse;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
-
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/musics")
 @RequiredArgsConstructor

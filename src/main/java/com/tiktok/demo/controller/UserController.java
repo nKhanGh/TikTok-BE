@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tiktok.demo.service.UserService;
 
 import jakarta.validation.Valid;
-import jakarta.websocket.server.PathParam;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,21 +27,19 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.tiktok.demo.dto.request.UserUpdateRequest;
 import com.tiktok.demo.dto.request.UsernameAddRequest;
-import com.tiktok.demo.dto.request.UsernameRandomAddRequest;
 import com.tiktok.demo.dto.response.UserPublicResponse;
-import com.tiktok.demo.entity.UserRelation;
 
 import main.java.com.tiktok.demo.dto.response.UserRelationPageResponse;
 
 
 
 
+@SuppressWarnings("unused")
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -53,7 +50,6 @@ public class UserController {
     
     @PostMapping
     ApiResponse<UserPrivateResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
-        log.info("In controller");
         return ApiResponse.<UserPrivateResponse>builder()
             .result(userService.createUser(request, true))
             .build();
@@ -75,19 +71,12 @@ public class UserController {
     
 
     @GetMapping("/private/{userId}")
-    ApiResponse<UserPrivateResponse> getUserbyAdmin(@PathVariable String userId){
+    ApiResponse<UserPrivateResponse> getUserByAdmin(@PathVariable String userId){
         return ApiResponse.<UserPrivateResponse>builder()
             .result(userService.getUserByAdmin(userId))
             .build();
     }
 
-    @GetMapping("/public/{userId}")
-    ApiResponse<UserPublicResponse> getUserbyUser(@PathVariable String userId){
-        return ApiResponse.<UserPublicResponse>builder()
-            .result(userService.getUserByUser(userId))
-            .build();
-    }
-    
 
     @PutMapping("/{userId}")
     ApiResponse<UserPrivateResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest request){
@@ -103,7 +92,6 @@ public class UserController {
         @RequestParam String name,
         @RequestParam String bio
     ) throws B2Exception, IOException{
-        log.info("kHang00");
         return ApiResponse.<UserPublicResponse>builder()
             .result(userService.updatePublicUser(avatarFile, username, name, bio))
             .build();
@@ -132,12 +120,19 @@ public class UserController {
             .build();
     }
 
+    @GetMapping("/public/{username}")
+    ApiResponse<UserPublicResponse> getByUsername(@PathVariable String username){
+        return ApiResponse.<UserPublicResponse>builder()
+                .result(userService.getUserByUsername(username))
+                .build();
+    }
+
     @PostMapping("/{userId}/{action}")
-    ApiResponse<?> followUser(
+    ApiResponse<Void> followUser(
         @PathVariable String userId,
         @PathVariable String action
     ){
-        return ApiResponse.builder()
+        return ApiResponse.<Void>builder()
             .message(userService.addFollowStatus(userId, action))
             .build();
     }
@@ -179,7 +174,7 @@ public class UserController {
             .build();
     }
 
-    @GetMapping("/followed")
+    @GetMapping("/public/followed")
     ApiResponse<UserRelationPageResponse> getFollowedUser(
         @RequestParam(defaultValue="0") int page,
         @RequestParam(defaultValue="5") int size
@@ -188,11 +183,4 @@ public class UserController {
             .result(userService.getFollowedUser(page, size))
             .build();
     }
-
-    
-    
-    
-    
-    
-    
 }

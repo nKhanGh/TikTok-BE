@@ -10,8 +10,10 @@ import java.util.StringJoiner;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import com.nimbusds.jose.JOSEException;
@@ -62,7 +64,7 @@ public class AuthenticationService {
     UserRepository userRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
 
-    PasswordEncoder passwordEncoder;
+    private final @Lazy PasswordEncoder passwordEncoder;
 
     Random random = new Random();
 
@@ -96,7 +98,8 @@ public class AuthenticationService {
             .build();
     }
 
-    private String generateToken(User user){
+    @Transactional(readOnly = true)
+    public String generateToken(User user){
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
@@ -223,7 +226,7 @@ public class AuthenticationService {
         );
     }
 
-    String generateUsername(){
+    public String generateUsername(){
         String username;
         do{
             long number = Math.abs(random.nextLong() % 1_000_000_0000L);
