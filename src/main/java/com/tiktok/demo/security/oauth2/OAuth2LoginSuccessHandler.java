@@ -34,21 +34,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                                         Authentication authentication) throws IOException {
 
         try {
-            // Fallback method: find user by email từ OAuth2 attributes
             if (authentication.getPrincipal() instanceof OAuth2User oAuth2User) {
                 String email = oAuth2User.getAttribute("email");
-                log.info("Looking for user by email: {}", email);
-
+                log.info(oAuth2User.getName());
                 User user = userRepository.findByEmailWithRoles(email)
-                        .orElseThrow(() -> {
-                            log.error("User not found with email: {}", email);
-                            return new AppException(ErrorCode.USER_NOT_EXISTED);
-                        });
-
-                log.info("Found user: {}, roles count: {}", user.getId(), user.getRoles().size());
-
-                // Force initialize roles collection trong transaction
-//                user.getRoles().size(); // Trigger lazy loading
+                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
                 String token = authenticationService.generateToken(user);
 
