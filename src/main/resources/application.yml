@@ -8,12 +8,12 @@ spring:
         multipart:
             max-file-size: 100MB
             max-request-size: 100MB
-        
-    profiles:
-        active: dev
+
     datasource:
-        url: jdbc:mysql://localhost:3308/myTiktok
+        url: ${DB_URL}
         driverClassName: "com.mysql.cj.jdbc.Driver"
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
     jpa:
         hibernate:
             ddl-auto: update    
@@ -61,5 +61,6 @@ b2:
     imageBucketId: ${BUCKET_IMAGE_ID}
 
 jwt:
+    signerKey: ${JWT_SIGNER_KEY}
     valid-duration: 18000
     refreshable-duration: 100000

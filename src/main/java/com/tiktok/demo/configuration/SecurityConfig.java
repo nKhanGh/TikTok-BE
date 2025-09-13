@@ -32,11 +32,13 @@ public class SecurityConfig {
         "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refreshToken", 
         "/emails/sender/verifyCode", "emails/verify",
         "/auth/register", "/auth/verify-email",
+            "/v3/api-docs"
     };
 
     static String[] publicEndpointGet = {
         "/users/exist/**", "/images/**", "/videos/public/**", "/comments/**",
-            "/users/public/**", "/oauth2/**", "/login/oauth2/**"
+            "/users/public/**", "/oauth2/**", "/login/oauth2/**",
+            "/v3/api-docs"
     };
 
     @Bean
